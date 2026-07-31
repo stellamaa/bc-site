@@ -34,7 +34,6 @@ jobs:
       - name: Build with Next.js
         env:
           GITHUB_PAGES: "true"
-          NEXT_PUBLIC_BASE_PATH: "/bc-site"
         run: npx next build
       - name: Prepare admin routes for GitHub Pages
         run: |
