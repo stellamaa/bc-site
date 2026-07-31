@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
         trailingSlash: true,
       }
     : {}),
+  // Baked into the client bundle so Sanity Studio basePath matches Next basePath
+  env: {
+    NEXT_PUBLIC_BASE_PATH: isGithubPages ? "/bc-site" : "",
+  },
   images: {
     unoptimized: isGithubPages,
     remotePatterns: [

@@ -4,6 +4,7 @@ import {
   sanityApiVersion,
   sanityDataset,
   sanityProjectId,
+  studioBasePath,
 } from "./lib/sanity-config";
 import schemas from "./sanity/schemas";
 
@@ -12,7 +13,7 @@ const config = defineConfig({
   dataset: sanityDataset,
   apiVersion: sanityApiVersion,
   title: "BC Site",
-  basePath: "/admin",
+  basePath: studioBasePath,
   plugins: [structureTool()],
   schema: {
     types: schemas,
