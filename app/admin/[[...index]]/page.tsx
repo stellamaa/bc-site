@@ -1,8 +1,9 @@
-"use client";
+import Studio from "./Studio";
 
-import config  from "@/sanity.config"
-import { NextStudio } from "next-sanity/studio"
+export function generateStaticParams() {
+  return [{ index: [] as string[] }];
+}
 
 export default function AdminPage() {
-    return <NextStudio config={config}/>
+  return <Studio />;
 }

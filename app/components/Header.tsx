@@ -92,7 +92,7 @@ export default function Header({ className = "" }: HeaderProps) {
   if (pathname?.startsWith("/admin")) return null;
 
   const isActive = (item: (typeof navItems)[number]) => {
-    if (item.isLogo) return false;
+    if ("isLogo" in item && item.isLogo) return false;
     if (pathname === "/") {
       return item.section === activeSection;
     }
@@ -105,8 +105,9 @@ export default function Header({ className = "" }: HeaderProps) {
     >
       <nav className="flex items-center justify-between gap-2 md:gap-4 text-[11px] sm:text-xs md:text-base tracking-[0.08em] uppercase font-medium text-black">
         {navItems.map((item) => {
+          const isLogo = "isLogo" in item && item.isLogo;
           const active = isActive(item);
-          const label = item.isLogo
+          const label = isLogo
             ? `(${item.label})`
             : active
               ? `(${item.label})`
@@ -118,7 +119,7 @@ export default function Header({ className = "" }: HeaderProps) {
               href={item.href}
               onClick={(e) => onSectionClick(e, item.section)}
               className={
-                item.isLogo
+                isLogo
                   ? "font-medium text-base md:text-3xl lg:text-4xl tracking-normal"
                   : "hover:opacity-70 transition-opacity"
               }
