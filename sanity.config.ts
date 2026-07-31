@@ -17,6 +17,10 @@ const config = defineConfig({
   schema: {
     types: schemas,
   },
+  // Keep classic Publish button; Releases hides/moves it for many editors
+  releases: {
+    enabled: false,
+  },
 });
 
 export default config;

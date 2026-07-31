@@ -1,10 +1,21 @@
 import type { NextConfig } from "next";
 
+/** Set in the GitHub Pages workflow only — keeps local /admin Studio working. */
+const isGithubPages = process.env.GITHUB_PAGES === "true";
+
 const nextConfig: NextConfig = {
-  // Required for GitHub Pages (static hosting)
-  output: "export",
+  ...(isGithubPages
+    ? {
+        output: "export" as const,
+        // Project site: https://stellamaa.github.io/bc-site/
+        basePath: "/bc-site",
+        assetPrefix: "/bc-site",
+        // Emits admin/index.html so /bc-site/admin/ resolves on GitHub Pages
+        trailingSlash: true,
+      }
+    : {}),
   images: {
-    unoptimized: true,
+    unoptimized: isGithubPages,
     remotePatterns: [
       {
         protocol: "https",

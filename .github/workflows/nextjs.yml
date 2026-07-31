@@ -74,7 +74,16 @@ jobs:
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Build with Next.js
+        env:
+          GITHUB_PAGES: "true"
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
+      # Deep Studio URLs (/admin/structure/...) fall back to the Studio shell
+      - name: Studio SPA fallback for GitHub Pages
+        run: |
+          mkdir -p out/admin
+          if [ -f out/admin/index.html ]; then
+            cp out/admin/index.html out/admin/404.html
+          fi
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
