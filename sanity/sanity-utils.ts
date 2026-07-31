@@ -53,6 +53,7 @@ const workProjection = groq`{
     caption
   },
   videoUrl,
+  "videoFileUrl": videoFile.asset->url,
   "talent": talent[]->{
     _id,
     name,

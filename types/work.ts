@@ -25,6 +25,7 @@ export type Work = {
   description?: string;
   gallery?: WorkGalleryImage[];
   videoUrl?: string;
+  videoFileUrl?: string;
   talent?: WorkTalentRef[];
   additionalCredits?: string[];
   categories?: WorkCategoryRef[];

@@ -11,9 +11,8 @@ type WorkSectionProps = {
   works: Work[];
 };
 
-function formatIndex(index: number, active: boolean) {
-  const n = String(index + 1).padStart(2, "0");
-  return active ? `(${n})` : n;
+function formatIndex(index: number) {
+  return String(index + 1).padStart(2, "0");
 }
 
 export default function WorkSection({ categories, works }: WorkSectionProps) {
@@ -26,7 +25,6 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>(
     () => categoryParams,
   );
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedSlugs(categoryKey ? categoryKey.split(",") : []);
@@ -71,10 +69,10 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
     >
       <div className="flex gap-4 md:gap-10 lg:gap-14 items-start">
         <aside className="shrink-0 w-[42%] max-w-[11rem] md:w-44 md:max-w-none">
-          <p className="text-[10px] md:text-xs font-medium uppercase tracking-[0.12em] mb-3">
+          <p className="text-[10px] md:text-xs text-center font-medium uppercase tracking-[0.12em] mb-3">
             Work Menu
           </p>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-3">
             {categories.map((category) => {
               if (!category.slug) return null;
               const selected = selectedSlugs.includes(category.slug);
@@ -83,7 +81,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                   <button
                     type="button"
                     onClick={() => toggleCategory(category.slug!)}
-                    className={`w-full rounded-full border border-black px-3 py-2 text-[10px] md:text-xs uppercase tracking-wide text-left leading-tight font-medium transition-colors ${
+                    className={`w-full rounded-full border border-black px-5 py-2 text-[10px] md:text-base uppercase tracking-wide text-center leading-tight font-medium transition-colors ${
                       selected
                         ? "bg-black text-white"
                         : "bg-white text-black hover:bg-neutral-100"
@@ -101,43 +99,36 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
           {filteredWorks.length === 0 ? (
             <div className="min-h-[40vh]" aria-hidden />
           ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 md:gap-x-12 md:gap-y-14">
               {filteredWorks.map((work, index) => {
-                const active =
-                  hoveredId === work._id ||
-                  (hoveredId === null && index === 0);
+                const n = formatIndex(index);
                 return (
-                  <li
-                    key={work._id}
-                    className="flex flex-col gap-2"
-                    onMouseEnter={() => setHoveredId(work._id)}
-                    onMouseLeave={() => setHoveredId(null)}
-                  >
-                    <span
-                      className={`text-xs md:text-sm font-medium tabular-nums ${
-                        active ? "text-black" : "text-neutral-400"
-                      }`}
-                    >
-                      {formatIndex(index, active)}
-                    </span>
-                    {work.thumbnail ? (
-                      <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
-                        <Image
-                          src={work.thumbnail}
-                          alt={work.thumbnailAlt || work.title || "Work"}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 50vw, 33vw"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-square w-full bg-neutral-100" />
-                    )}
-                    {work.description ? (
-                      <p className="text-xs md:text-sm font-normal leading-snug text-black">
-                        {work.description}
-                      </p>
-                    ) : null}
+                  <li key={work._id} className="group min-w-0">
+                    <div className="flex w-full flex-col gap-2 md:max-w-[12rem] lg:max-w-[12.5rem]">
+                      <span className="text-xs md:text-sm font-medium tabular-nums text-neutral-400 transition-colors md:group-hover:text-black">
+                        <span className="hidden md:group-hover:inline">(</span>
+                        {n}
+                        <span className="hidden md:group-hover:inline">)</span>
+                      </span>
+                      {work.thumbnail ? (
+                        <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
+                          <Image
+                            src={work.thumbnail}
+                            alt={work.thumbnailAlt || work.title || "Work"}
+                            fill
+                            className="object-cover"
+                            sizes="200px"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-square w-full bg-neutral-100" />
+                      )}
+                      {work.description ? (
+                        <p className="text-xs md:text-sm font-normal leading-snug text-black">
+                          {work.description}
+                        </p>
+                      ) : null}
+                    </div>
                   </li>
                 );
               })}

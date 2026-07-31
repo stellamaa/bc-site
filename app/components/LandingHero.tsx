@@ -20,7 +20,7 @@ export default function LandingHero({
   return (
     <section className="hidden md:flex flex-1 flex-col items-center justify-center px-8 pb-16 pt-10 min-h-[80vh]">
       {categories.length > 0 ? (
-        <ul className="flex flex-col items-center gap-1 md:gap-5 text-center">
+        <ul className="flex flex-col items-center gap-1 text-center md:gap-5">
           {categories.map((category) => (
             <li key={category._id}>
               <Link
@@ -59,7 +59,7 @@ export default function LandingHero({
       {description && description.length > 0 ? (
         <PortableText
           value={description}
-          className="mt-16 w-full text-center text-sm md:text-base font-normal leading-[1.25] text-black [&_p]:leading-[inherit] [&_p]:mb-2"
+          className="mt-16 w-1/3 text-center text-sm md:text-lg font-normal leading-[1.25] text-black [&_p]:leading-[inherit] [&_p]:mb-2"
         />
       ) : null}
     </section>

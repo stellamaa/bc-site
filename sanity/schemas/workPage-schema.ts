@@ -2,7 +2,7 @@ import { defineField, defineType } from "sanity";
 
 const workPage = defineType({
   name: "workPage",
-  title: "Work Page",
+  title: "Work Page (ignore)",
   type: "document",
   fields: [
     defineField({
@@ -15,7 +15,7 @@ const workPage = defineType({
   ],
   preview: {
     prepare() {
-      return { title: "Work Page" };
+      return { title: "Work Page (ignore)" };
     },
   },
 });

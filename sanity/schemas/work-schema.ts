@@ -55,7 +55,18 @@ const work = defineType({
       name: "videoUrl",
       title: "Video URL",
       type: "url",
-      description: "Optional Vimeo, YouTube, or direct video link.",
+      description:
+        "Optional. Use this OR upload a file below — Vimeo, YouTube, or a direct video link.",
+    }),
+    defineField({
+      name: "videoFile",
+      title: "Video file",
+      type: "file",
+      options: {
+        accept: "video/*",
+      },
+      description:
+        "Optional. Upload an MP4 (or similar) if you are not using a URL.",
     }),
     defineField({
       name: "talent",
