@@ -15,6 +15,14 @@ function formatIndex(index: number) {
   return String(index + 1).padStart(2, "0");
 }
 
+function chunkItems<T>(items: T[], size: number): T[][] {
+  const pages: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    pages.push(items.slice(i, i + size));
+  }
+  return pages;
+}
+
 export default function TalentSection({ talents, works }: TalentSectionProps) {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -40,12 +48,15 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  const showScrollTrack = isDesktop && talentWorks.length > 3;
+  // Mobile: 2×2 pages · Desktop: 1×3 pages
+  const pageSize = isDesktop ? 3 : 4;
+  const workPages = chunkItems(talentWorks, pageSize);
+  const showScrollTrack = isDesktop && talentWorks.length > pageSize;
 
   return (
     <section
       id="talent"
-      className="min-h-dvh scroll-mt-20 md:scroll-mt-24 px-4 pt-4 pb-16 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
+      className="min-h-dvh scroll-mt-14 px-4 pt-4 pb-16 md:scroll-mt-24 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
     >
       <div className="flex items-start gap-4 md:gap-16 lg:gap-24">
         <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-56 md:max-w-none">
@@ -114,66 +125,62 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
               {talentWorks.length > 0 ? (
                 <div className="mt-5 md:mt-auto md:pt-0">
                   <div
-                    ref={isDesktop ? scrollRef : undefined}
-                    className={
-                      isDesktop
-                        ? "talent-works-scroll w-full overflow-x-auto [container-type:inline-size]"
-                        : undefined
-                    }
+                    ref={scrollRef}
+                    className="talent-works-scroll flex w-full snap-x snap-mandatory overflow-x-auto"
                   >
-                    <ul
-                      className={
-                        isDesktop
-                          ? "flex gap-x-12"
-                          : "grid grid-cols-1 gap-8 sm:grid-cols-2"
-                      }
-                    >
-                      {talentWorks.map((work, index) => (
-                        <li
-                          key={work._id}
-                          className={
-                            isDesktop ? "min-w-0 shrink-0" : "min-w-0"
-                          }
-                          style={
-                            isDesktop
-                              ? { width: "calc((100cqw - 6rem) / 3)" }
-                              : undefined
-                          }
-                        >
-                          <article className="flex w-full max-w-[8.5rem] flex-col gap-2 md:max-w-[9rem]">
-                            <span className="text-xl font-light tabular-nums text-neutral-400 md:text-2xl lg:text-3xl">
-                              {formatIndex(index)}
-                            </span>
-                            {work.thumbnail ? (
-                              <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
-                                <Image
-                                  src={work.thumbnail}
-                                  alt={
-                                    work.thumbnailAlt || work.title || "Work"
-                                  }
-                                  fill
-                                  className="object-cover"
-                                  sizes="144px"
-                                />
-                              </div>
-                            ) : (
-                              <div className="aspect-square w-full bg-neutral-100" />
-                            )}
-                            {work.title ? (
-                              <h3 className="text-[11px] leading-snug font-medium md:text-xs">
-                                {work.title}
-                              </h3>
-                            ) : null}
-                            {work.description ? (
-                              <div className="text-[11px] leading-snug font-normal text-black md:text-xs">
-                                <p className="line-clamp-5">{work.description}</p>
-                                <span className="font-medium">Read More</span>
-                              </div>
-                            ) : null}
-                          </article>
-                        </li>
-                      ))}
-                    </ul>
+                    {workPages.map((page, pageIndex) => (
+                      <ul
+                        key={page[0]?._id ?? pageIndex}
+                        className={
+                          isDesktop
+                            ? "grid w-full shrink-0 snap-start grid-cols-3 gap-x-12"
+                            : "grid w-full shrink-0 snap-start grid-cols-2 gap-x-4 gap-y-6"
+                        }
+                      >
+                        {page.map((work, indexInPage) => {
+                          const index = pageIndex * pageSize + indexInPage;
+                          return (
+                            <li key={work._id} className="min-w-0">
+                              <article className="flex w-full max-w-[8.5rem] flex-col gap-2 md:max-w-[9rem]">
+                                <span className="text-xl font-light tabular-nums text-neutral-400 md:text-2xl lg:text-3xl">
+                                  {formatIndex(index)}
+                                </span>
+                                {work.thumbnail ? (
+                                  <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
+                                    <Image
+                                      src={work.thumbnail}
+                                      alt={
+                                        work.thumbnailAlt ||
+                                        work.title ||
+                                        "Work"
+                                      }
+                                      fill
+                                      className="object-cover"
+                                      sizes="144px"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="aspect-square w-full bg-neutral-100" />
+                                )}
+                                {work.title ? (
+                                  <h3 className="text-[11px] leading-snug font-medium md:text-xs">
+                                    {work.title}
+                                  </h3>
+                                ) : null}
+                                {work.description ? (
+                                  <div className="text-[11px] leading-snug font-normal text-black md:text-xs">
+                                    <p className="line-clamp-5">
+                                      {work.description}
+                                    </p>
+                                    <span className="font-medium">Read More</span>
+                                  </div>
+                                ) : null}
+                              </article>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ))}
                   </div>
                   <ScrollTrack
                     scrollRef={scrollRef}

@@ -90,7 +90,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
   return (
     <section
       id="work"
-      className="min-h-dvh scroll-mt-20 md:scroll-mt-24 px-4 pt-4 pb-16 md:pt-18 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
+      className="min-h-dvh scroll-mt-14 px-4 pt-4 pb-16 md:scroll-mt-24 md:pt-18 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
     >
       <div className="flex items-start gap-4 md:gap-16 lg:gap-24">
         <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-56 md:max-w-none">

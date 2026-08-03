@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import AboutSection from "@/app/components/AboutSection";
-import Header from "@/app/components/Header";
 import LandingHero from "@/app/components/LandingHero";
 import PortableText from "@/app/components/PortableText";
 import TalentSection from "@/app/components/TalentSection";
@@ -37,22 +36,18 @@ export default async function Home() {
     <main className="flex flex-col bg-white text-black">
       <section
         id="landing"
-        className="scroll-mt-20 md:scroll-mt-24 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-[6.5rem] md:flex-col md:pt-[6.5rem]"
+        className="scroll-mt-14 md:scroll-mt-24 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-[6.5rem] md:flex-col md:pt-[6.5rem]"
       >
-        <div className="md:hidden px-4 pt-6 pb-2">
-          <h1 className="text-center text-3xl font-medium tracking-tight uppercase mb-6">
+        <div className="px-4 pt-4 pb-2 md:hidden">
+          <h1 className="mb-6 text-center text-3xl font-medium tracking-tight uppercase">
             BLANK C()
           </h1>
           {description && description.length > 0 ? (
             <PortableText
               value={description}
-              className="mx-auto max-w-md text-center text-sm font-normal leading-relaxed text-black mb-2"
+              className="mx-auto mb-2 max-w-md text-center text-sm font-normal leading-relaxed text-black"
             />
           ) : null}
-        </div>
-
-        <div className="md:hidden sticky top-0 z-50 bg-white">
-          <Header />
         </div>
 
         <LandingHero description={description} categories={landingCategories} />
