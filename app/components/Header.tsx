@@ -44,35 +44,30 @@ export default function Header({ className = "" }: HeaderProps) {
       "about",
       "contact",
     ];
-    const elements = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => Boolean(el));
 
-    if (elements.length === 0) return;
+    const updateActive = () => {
+      const marker = window.innerHeight * 0.35;
+      let current: SectionId = isMobile ? "work" : "landing";
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-        // Prefer contact when it's in view (nested inside about)
-        const contactEntry = visible.find((e) => e.target.id === "contact");
-        if (contactEntry && contactEntry.intersectionRatio > 0.4) {
-          setActiveSection("contact");
-          return;
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top;
+        if (top <= marker) {
+          current = id;
         }
+      }
 
-        const top = visible.find((e) => e.target.id !== "contact") ?? visible[0];
-        if (top?.target.id) {
-          setActiveSection(top.target.id as SectionId);
-        }
-      },
-      { rootMargin: "-20% 0px -40% 0px", threshold: [0.1, 0.25, 0.4, 0.5] },
-    );
+      setActiveSection(current);
+    };
 
-    for (const el of elements) observer.observe(el);
-    return () => observer.disconnect();
+    updateActive();
+    window.addEventListener("scroll", updateActive, { passive: true });
+    window.addEventListener("resize", updateActive);
+    return () => {
+      window.removeEventListener("scroll", updateActive);
+      window.removeEventListener("resize", updateActive);
+    };
   }, [pathname]);
 
   const onSectionClick = useCallback(
@@ -103,7 +98,7 @@ export default function Header({ className = "" }: HeaderProps) {
     <header
       className={`w-full px-4 md:px-8 py-4 md:py-6 bg-white ${className}`}
     >
-      <nav className="flex items-center justify-between gap-2 md:gap-4 text-[11px] sm:text-xs md:text-base tracking-[0.08em] uppercase font-medium text-black">
+      <nav className="flex items-center justify-between gap-2 md:gap-4 text-[11px] sm:text-xs md:text-xl tracking-[0.08em] uppercase font-bold text-black">
         {navItems.map((item) => {
           const isLogo = "isLogo" in item && item.isLogo;
           const active = isActive(item);
@@ -120,7 +115,7 @@ export default function Header({ className = "" }: HeaderProps) {
               onClick={(e) => onSectionClick(e, item.section)}
               className={
                 isLogo
-                  ? "font-medium text-base md:text-3xl lg:text-4xl tracking-normal"
+                  ? "font-medium text-base md:text-4xl lg:text-5xl tracking-normal"
                   : "hover:opacity-70 transition-opacity"
               }
             >

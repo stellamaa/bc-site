@@ -18,7 +18,7 @@ export default function LandingHero({
   const router = useRouter();
 
   return (
-    <section className="hidden md:flex flex-1 flex-col items-center justify-center px-8 pb-16 pt-10 min-h-[80vh]">
+    <div className="hidden md:flex flex-1 flex-col items-center justify-center px-8 min-h-0">
       {categories.length > 0 ? (
         <ul className="flex flex-col items-center gap-1 text-center md:gap-5">
           {categories.map((category) => (
@@ -62,6 +62,6 @@ export default function LandingHero({
           className="mt-16 w-1/3 text-center text-sm md:text-lg font-normal leading-[1.25] text-black [&_p]:leading-[inherit] [&_p]:mb-2"
         />
       ) : null}
-    </section>
+    </div>
   );
 }

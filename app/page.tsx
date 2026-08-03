@@ -35,7 +35,10 @@ export default async function Home() {
 
   return (
     <main className="flex flex-col bg-white text-black">
-      <section id="landing" className="scroll-mt-20 md:scroll-mt-24">
+      <section
+        id="landing"
+        className="scroll-mt-20 md:scroll-mt-24 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-[6.5rem] md:flex-col md:pt-[6.5rem]"
+      >
         <div className="md:hidden px-4 pt-6 pb-2">
           <h1 className="text-center text-3xl font-medium tracking-tight uppercase mb-6">
             BLANK C()

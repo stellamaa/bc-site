@@ -20,7 +20,7 @@ export default function SiteChrome({
       <div className="hidden md:block fixed top-0 inset-x-0 z-50 bg-white">
         <Header />
       </div>
-      <div className="flex-1 flex flex-col md:pt-[5.5rem]">{children}</div>
+      <div className="flex-1 flex flex-col md:pt-[6.5rem]">{children}</div>
     </>
   );
 }

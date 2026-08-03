@@ -17,20 +17,14 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Desktop talent / work horizontal project strip */
+/* Hide native scrollbar — custom ScrollTrack is used instead */
+.work-works-scroll,
 .talent-works-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #171717 transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
+.work-works-scroll::-webkit-scrollbar,
 .talent-works-scroll::-webkit-scrollbar {
-  height: 2px;
-}
-
-.talent-works-scroll::-webkit-scrollbar-track {
-  background: #e5e5e5;
-}
-
-.talent-works-scroll::-webkit-scrollbar-thumb {
-  background: #171717;
+  display: none;
 }
