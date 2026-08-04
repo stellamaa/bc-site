@@ -22,13 +22,13 @@ export default function AboutSection({ about }: AboutSectionProps) {
     linkedin,
   } = about;
 
+  const pillClass =
+    "shrink-0 rounded-full bg-black px-5 py-0.7 text-center text-lg font-medium tracking-wide text-white uppercase transition-opacity hover:opacity-80 md:px-16 md:py-4 md:text-2xl";
+
   const pills = (
     <>
       {email ? (
-        <a
-          href={`mailto:${email}`}
-          className="rounded-full bg-black px-10 py-3 text-center text-sm font-medium tracking-wide text-white uppercase transition-opacity hover:opacity-80 md:px-16 md:py-4 md:text-2xl"
-        >
+        <a href={`mailto:${email}`} className={pillClass}>
           Email
         </a>
       ) : null}
@@ -37,7 +37,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
           href={instagram}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-full bg-black px-10 py-3 text-center text-sm font-medium tracking-wide text-white uppercase transition-opacity hover:opacity-80 md:px-16 md:py-4 md:text-2xl"
+          className={pillClass}
         >
           Instagram
         </a>
@@ -47,7 +47,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
           href={linkedin}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-full bg-black px-10 py-3 text-center text-sm font-medium tracking-wide text-white uppercase transition-opacity hover:opacity-80 md:px-16 md:py-4 md:text-2xl md:text-2xl"
+          className={pillClass}
         >
           LinkedIn
         </a>
@@ -70,7 +70,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
 
           {profiles.map((profile) => (
             <article key={profile._key} className="flex flex-col gap-3 md:gap-0">
-              <div className="flex items-start gap-4 md:gap-6">
+              <div className="flex flex-row items-start gap-4 md:gap-6">
                 {profile.image ? (
                   <div className="relative h-28 w-28 shrink-0 overflow-hidden bg-neutral-100 md:h-36 md:w-36">
                     <Image
@@ -85,7 +85,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
                   <div className="h-28 w-28 shrink-0 bg-neutral-100 md:h-36 md:w-36" />
                 )}
                 {profile.bio ? (
-                  <p className="pt-0.5 text-xs font-normal leading-normal whitespace-pre-line md:w-1/2 md:text-sm">
+                  <p className="min-w-0 flex-1 text-xs font-normal leading-normal whitespace-pre-line md:w-1/2 md:flex-none md:text-sm">
                     {profile.bio}
                   </p>
                 ) : null}
@@ -97,18 +97,6 @@ export default function AboutSection({ about }: AboutSectionProps) {
               ) : null}
             </article>
           ))}
-
-          {featuredImage ? (
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 md:hidden">
-              <Image
-                src={featuredImage}
-                alt={featuredImageAlt || "BlankCo"}
-                fill
-                className="object-cover"
-                sizes="100vw"
-              />
-            </div>
-          ) : null}
 
           {/* Address under last profile — ~gap-5, not the stack’s gap-12 */}
           <div
@@ -136,8 +124,8 @@ export default function AboutSection({ about }: AboutSectionProps) {
         ) : null}
       </div>
 
-      {/* Separate row below content — centered, not beside the address */}
-      <div className="mt-12 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center md:mt-16 md:gap-10 lg:mb-10 ">
+      {/* Separate row below content — one row of pills */}
+      <div className="mt-12 flex w-full flex-nowrap items-center justify-between md:mt-13 md:justify-center md:gap-10 lg:mb-10">
         {pills}
       </div>
     </section>

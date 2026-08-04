@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import AboutSection from "@/app/components/AboutSection";
+import IntroLoader from "@/app/components/IntroLoader";
 import LandingHero from "@/app/components/LandingHero";
 import PortableText from "@/app/components/PortableText";
 import TalentSection from "@/app/components/TalentSection";
 import WorkSection from "@/app/components/WorkSection";
+import { collectIntroMedia } from "@/lib/introMedia";
 import {
   getAbout,
   getCategories,
@@ -31,9 +33,12 @@ export default async function Home() {
     ]);
 
   const description = landing?.description ?? null;
+  const introMedia = collectIntroMedia(works);
 
   return (
     <main className="flex flex-col bg-white text-black">
+      <IntroLoader media={introMedia} />
+
       <section
         id="landing"
         className="scroll-mt-14 md:scroll-mt-24 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-[6.5rem] md:flex-col md:pt-[6.5rem]"
