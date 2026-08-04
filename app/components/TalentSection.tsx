@@ -71,17 +71,17 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
       id="talent"
       className="min-h-dvh scroll-mt-14 px-3 pt-3 pb-16 md:scroll-mt-24 md:px-8 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
     >
-      <div className="grid grid-cols-[0.8fr_2fr] items-start gap-2 md:flex md:gap-16 lg:gap-24">
-        <aside className="flex min-w-0 flex-col items-start md:w-56 md:max-w-none md:shrink-0 md:items-center">
-          <p className="mb-5 hidden w-full text-center text-[10px] font-medium tracking-[0.12em] uppercase md:block md:text-xs">
+      <div className="flex items-start gap-4 md:gap-16 lg:gap-24">
+        <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-56 md:max-w-none">
+          <p className="mb-5 w-full text-center text-[10px] font-medium tracking-[0.12em] uppercase md:text-xs">
             Talent Menu
           </p>
-          <ul className="flex w-full flex-col items-start gap-2 md:items-stretch md:gap-4">
+          <ul className="flex w-full flex-col gap-4">
             {talents.map((talent) => {
               if (!talent.slug) return null;
               const active = selectedSlug === talent.slug;
               return (
-                <li key={talent._id} className="max-w-full">
+                <li key={talent._id}>
                   <button
                     type="button"
                     onClick={() =>
@@ -89,7 +89,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                         prev === talent.slug ? null : talent.slug!,
                       )
                     }
-                    className={`max-w-full rounded-full border border-black px-2.5 py-1.5 text-left text-[9px] font-medium leading-tight tracking-wide uppercase transition-colors md:w-full md:px-5 md:py-2 md:text-center md:text-base ${
+                    className={`w-full rounded-full border border-black px-5 py-2 text-center text-[10px] font-medium leading-tight tracking-wide uppercase transition-colors md:text-base ${
                       active
                         ? "bg-black text-white"
                         : "bg-white text-black hover:bg-neutral-100"

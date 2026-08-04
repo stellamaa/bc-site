@@ -108,7 +108,7 @@ export default function IntroLoader({ media }: IntroLoaderProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-white px-4 transition-opacity ease-out ${
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-white px-3 transition-opacity ease-out md:px-4 ${
         overlayFading
           ? "opacity-0 duration-[900ms]"
           : "opacity-100 duration-150"
@@ -116,10 +116,7 @@ export default function IntroLoader({ media }: IntroLoaderProps) {
       aria-hidden
     >
       {/* Single wordmark: BLANK C( media ) — media replaces the number in the logo */}
-      <div
-        className="flex items-center font-medium tracking-tight text-black uppercase"
-        style={{ fontSize: "clamp(2.25rem, 19vw, 10rem)" }}
-      >
+      <div className="flex max-w-full items-center font-medium tracking-tight text-black uppercase text-[clamp(1.15rem,9.2vw,2.6rem)] md:text-[clamp(2.25rem,19vw,10rem)]">
         <span>BLANK&nbsp;C</span>
 
         <span className="select-none leading-none">(</span>
