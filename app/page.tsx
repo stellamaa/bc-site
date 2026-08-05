@@ -6,7 +6,7 @@ import LandingHero from "@/app/components/LandingHero";
 import PortableText from "@/app/components/PortableText";
 import TalentSection from "@/app/components/TalentSection";
 import WorkSection from "@/app/components/WorkSection";
-import { collectIntroMedia } from "@/lib/introMedia";
+import { collectIntroMedia, collectSiteImageUrls } from "@/lib/introMedia";
 import {
   getAbout,
   getCategories,
@@ -34,10 +34,11 @@ export default async function Home() {
 
   const description = landing?.description ?? null;
   const introMedia = collectIntroMedia(works);
+  const preloadUrls = collectSiteImageUrls(works, talents, about);
 
   return (
     <main className="flex flex-col bg-white text-black">
-      <IntroLoader media={introMedia} />
+      <IntroLoader media={introMedia} preloadUrls={preloadUrls} />
 
       <section
         id="landing"

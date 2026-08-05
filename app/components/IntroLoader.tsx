@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { preloadImages } from "@/lib/introMedia";
 
 export type IntroMediaItem = {
   type: "image" | "video";
@@ -13,23 +14,32 @@ type IntroPhase = "cycle" | "collapse" | "hold" | "fade" | "done";
 const DESIGN_STATIC = false;
 
 const SESSION_KEY = "bc-intro-seen";
-const SLIDE_MS = 420;
-const CYCLE_MS = 3600;
+const SLIDE_MS = 280;
+/** Keep flickering at least this long so the intro reads clearly */
+const MIN_CYCLE_MS = 2200;
+/** Don't block forever if a CDN image hangs */
+const MAX_WAIT_MS = 12000;
 const COLLAPSE_MS = 800;
 const HOLD_MS = 350;
 const FADE_MS = 900;
 
 type IntroLoaderProps = {
   media: IntroMediaItem[];
+  /** Site images to warm while the intro flickers */
+  preloadUrls?: string[];
 };
 
-export default function IntroLoader({ media }: IntroLoaderProps) {
+export default function IntroLoader({
+  media,
+  preloadUrls = [],
+}: IntroLoaderProps) {
   const slides = useMemo(
-    () => media.filter((item) => Boolean(item.src)),
+    () => media.filter((item) => item.type === "image" && Boolean(item.src)),
     [media],
   );
   const [phase, setPhase] = useState<IntroPhase | "boot">("boot");
   const [index, setIndex] = useState(0);
+  const startedAt = useRef(0);
 
   useEffect(() => {
     if (!DESIGN_STATIC) {
@@ -49,6 +59,7 @@ export default function IntroLoader({ media }: IntroLoaderProps) {
     }
 
     setPhase("cycle");
+    startedAt.current = performance.now();
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -57,6 +68,7 @@ export default function IntroLoader({ media }: IntroLoaderProps) {
     };
   }, [slides.length]);
 
+  // Flicker through thumbnails for the whole loading wait
   useEffect(() => {
     if (DESIGN_STATIC || phase !== "cycle" || slides.length === 0) return;
 
@@ -64,16 +76,47 @@ export default function IntroLoader({ media }: IntroLoaderProps) {
       setIndex((i) => (i + 1) % slides.length);
     }, SLIDE_MS);
 
-    const endCycle = window.setTimeout(() => {
-      window.clearInterval(slideTimer);
-      setPhase("collapse");
-    }, CYCLE_MS);
+    return () => window.clearInterval(slideTimer);
+  }, [phase, slides.length]);
+
+  // Prefetch site (+ intro) images; end cycle when ready (after a minimum time)
+  useEffect(() => {
+    if (DESIGN_STATIC || phase !== "cycle" || slides.length === 0) return;
+
+    let cancelled = false;
+    let finished = false;
+    const urls = [
+      ...new Set([
+        ...slides.map((s) => s.src),
+        ...preloadUrls.filter(Boolean),
+      ]),
+    ];
+
+    const finish = async () => {
+      if (cancelled || finished) return;
+      finished = true;
+      const elapsed = performance.now() - startedAt.current;
+      const remaining = Math.max(0, MIN_CYCLE_MS - elapsed);
+      if (remaining > 0) {
+        await new Promise((r) => window.setTimeout(r, remaining));
+      }
+      if (!cancelled) setPhase("collapse");
+    };
+
+    const timeout = window.setTimeout(() => {
+      void finish();
+    }, MAX_WAIT_MS);
+
+    void preloadImages(urls).then(() => {
+      window.clearTimeout(timeout);
+      void finish();
+    });
 
     return () => {
-      window.clearInterval(slideTimer);
-      window.clearTimeout(endCycle);
+      cancelled = true;
+      window.clearTimeout(timeout);
     };
-  }, [phase, slides.length]);
+  }, [phase, slides, preloadUrls]);
 
   useEffect(() => {
     if (DESIGN_STATIC) return;
@@ -115,7 +158,14 @@ export default function IntroLoader({ media }: IntroLoaderProps) {
       }`}
       aria-hidden
     >
-      {/* Single wordmark: BLANK C( media ) — media replaces the number in the logo */}
+      {/* Hidden preload layer — warms cache for next/image on the page */}
+      <div className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0">
+        {preloadUrls.slice(0, 40).map((src) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={src} src={src} alt="" />
+        ))}
+      </div>
+
       <div className="flex max-w-full items-center font-medium tracking-tight text-black uppercase text-[clamp(1.15rem,9.2vw,2.6rem)] md:text-[clamp(2.25rem,19vw,10rem)]">
         <span>BLANK&nbsp;C</span>
 
@@ -139,17 +189,7 @@ export default function IntroLoader({ media }: IntroLoaderProps) {
                 }
           }
         >
-          {current?.type === "video" ? (
-            <video
-              key={current.src}
-              src={current.src}
-              className="absolute inset-0 h-full w-full object-cover"
-              muted
-              playsInline
-              autoPlay
-              loop
-            />
-          ) : current?.src ? (
+          {current?.src ? (
             <Image
               key={current.src}
               src={current.src}

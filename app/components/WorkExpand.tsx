@@ -57,7 +57,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   };
 
   return (
-    <div className="work-expand mb-5 animate-[workExpandIn_320ms_ease-out] md:mb-4 md:ml-12">
+    <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-1 md:ml-12">
       <div className="relative aspect-video w-[58%] max-w-xl overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
         {mediaKind === "video" && video ? (
           <>
@@ -98,7 +98,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               <button
                 type="button"
                 onClick={handlePlay}
-                className="absolute inset-0 z-10 flex items-center justify-center font-normal tracking-wide text-white  transition-opacity hover:opacity-80 text-[80cqh] leading-none"
+                className="absolute inset-0 z-10 flex items-center justify-center font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[80cqh] leading-none"
                 aria-label="Play video"
               >
                 {"(>)"}
@@ -112,7 +112,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
             src={currentImage.url}
             alt={currentImage.alt || work.title || "Gallery image"}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="(max-width: 768px) 100vw, 70vw"
             priority
           />
