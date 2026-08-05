@@ -64,6 +64,29 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
     setOpenWorkId(null);
   }, [selectedSlug]);
 
+  // Clear selection when navigating away (e.g. BC) or on non-talent loads
+  useEffect(() => {
+    const clearSelection = () => {
+      setSelectedSlug(null);
+      setOpenWorkId(null);
+      setBioExpanded(false);
+    };
+
+    if (window.location.hash !== "#talent") {
+      clearSelection();
+    }
+
+    const onSection = (event: Event) => {
+      const section = (event as CustomEvent<{ section?: string }>).detail
+        ?.section;
+      if (section && section !== "talent") {
+        clearSelection();
+      }
+    };
+    window.addEventListener("bc:section", onSection);
+    return () => window.removeEventListener("bc:section", onSection);
+  }, []);
+
   useEffect(() => {
     if (openWorkId && !talentWorks.some((work) => work._id === openWorkId)) {
       setOpenWorkId(null);

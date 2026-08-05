@@ -120,6 +120,19 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
     setOpenWorkId((prev) => (prev === workId ? null : workId));
   };
 
+  // BC / landing: close expanded project
+  useEffect(() => {
+    const onSection = (event: Event) => {
+      const section = (event as CustomEvent<{ section?: string }>).detail
+        ?.section;
+      if (section === "landing") {
+        setOpenWorkId(null);
+      }
+    };
+    window.addEventListener("bc:section", onSection);
+    return () => window.removeEventListener("bc:section", onSection);
+  }, []);
+
   const canScroll = filteredWorks.length > 6;
   /** Desktop + expanded: single-row strip so other projects stay reachable */
   const stripLayout = Boolean(openWork) && isDesktop;

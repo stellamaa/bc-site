@@ -4,8 +4,8 @@ import AboutSection from "@/app/components/AboutSection";
 import IntroLoader from "@/app/components/IntroLoader";
 import LandingHero from "@/app/components/LandingHero";
 import PortableText from "@/app/components/PortableText";
-import TalentSection from "@/app/components/TalentSection";
-import WorkSection from "@/app/components/WorkSection";
+import TalentSectionSwitch from "@/app/components/TalentSectionSwitch";
+import WorkSectionSwitch from "@/app/components/WorkSectionSwitch";
 import { collectIntroMedia, collectSiteImageUrls } from "@/lib/introMedia";
 import {
   getAbout,
@@ -60,10 +60,15 @@ export default async function Home() {
       </section>
 
       <Suspense fallback={<div id="work" className="min-h-dvh" />}>
-        <WorkSection categories={workCategories} works={works} />
+        <WorkSectionSwitch categories={workCategories} works={works} />
       </Suspense>
 
-      <TalentSection talents={talents} works={works} />
+      <TalentSectionSwitch
+        talents={talents}
+        works={works}
+        // Experiment branch: overlay on by default. Back to original: ?talentLayout=default
+        defaultLayout="overlay"
+      />
 
       <AboutSection about={about} />
     </main>

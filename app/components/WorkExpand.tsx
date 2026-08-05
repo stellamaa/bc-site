@@ -58,7 +58,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
 
   return (
     <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-1 md:ml-12">
-      <div className="relative aspect-video w-[58%] max-w-xl overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
+      <div className="relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
         {mediaKind === "video" && video ? (
           <>
             {video.kind === "youtube" && playing ? (
@@ -132,7 +132,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 z-20 text-3xl font-medium tracking-wide text-white drop-shadow transition-opacity hover:opacity-80 md:top-1 md:right-3 md:text-4xl"
+          className="absolute -top-1 right-2 z-20 text-3xl font-medium tracking-wide text-white drop-shadow transition-opacity hover:opacity-80 md:-top-2 md:right-3 md:text-4xl"
           aria-label="Close project"
         >
           (X)
@@ -140,7 +140,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
       </div>
 
       {mediaKind === "gallery" && gallery.length > 1 ? (
-        <div className="mt-3 flex items-center justify-start gap-6 text-sm font-medium tracking-wide md:text-base">
+        <div className="mt-3 flex items-center justify-center gap-6 text-sm font-medium tracking-wide md:justify-start md:text-base">
           <button
             type="button"
             disabled={!canPrev}

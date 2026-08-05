@@ -60,6 +60,9 @@ export default function AboutSection({ about }: AboutSectionProps) {
       id="about"
       className="scroll-mt-14 px-4 pt-4 pb-20 md:scroll-mt-24 md:px-8 md:pt-2 md:pb-28 lg:p-10"
     >
+      <p className="mb-4 text-center text-[10px] font-medium tracking-wide uppercase md:hidden">
+        (About us)
+      </p>
       <div className="grid grid-cols-1 items-stretch gap-10 md:grid-cols-2 md:gap-12 lg:gap-16">
         <div className="flex flex-col gap-10 md:gap-12">
           {description ? (

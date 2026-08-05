@@ -80,6 +80,9 @@ export default function Header({ className = "" }: HeaderProps) {
       window.history.replaceState(null, "", `/#${section}`);
       scrollToId(section);
       setActiveSection(section);
+      window.dispatchEvent(
+        new CustomEvent("bc:section", { detail: { section } }),
+      );
     },
     [pathname],
   );
