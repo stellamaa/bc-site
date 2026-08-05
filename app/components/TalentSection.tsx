@@ -223,7 +223,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                     <span className="hidden md:inline">({selected.name})</span>
                   </h2>
                   {selected.bio ? (
-                    <div className="text-[10px] leading-[1.2] font-normal text-black md:text-base">
+                    <div className="text-xs leading-[1.2] font-normal text-black md:text-base">
                       <p
                         className={`whitespace-pre-line ${
                           bioExpanded

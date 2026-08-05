@@ -270,7 +270,7 @@ export default function TalentSectionAlt({
                 ({selected.name})
               </h2>
               {selected.bio ? (
-                <div className="max-w-md text-[10px] leading-[1.2] font-normal text-black">
+                <div className="max-w-md text-xs leading-[1.2] font-normal text-black">
                   <p
                     className={`whitespace-pre-line ${
                       bioExpanded ? "" : "line-clamp-6"

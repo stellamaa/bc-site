@@ -58,7 +58,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
   return (
     <section
       id="about"
-      className="scroll-mt-14 px-4 pt-4 pb-20 md:scroll-mt-24 md:px-8 md:pt-2 md:pb-28 lg:p-10"
+      className="scroll-mt-14 px-4 pt-4 pb-6 md:scroll-mt-24 md:px-8 md:pt-2 md:pb-8 lg:px-10 lg:pt-10 lg:pb-8"
     >
       <p className="mb-4 text-center text-[10px] font-medium tracking-wide uppercase md:hidden">
         (About us)
@@ -73,7 +73,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
 
           {profiles.map((profile) => (
             <article key={profile._key} className="flex flex-col gap-3 md:gap-0">
-              <div className="flex flex-row items-start gap-4 md:gap-6">
+              <div className="flex flex-row items-center gap-4 md:gap-6">
                 {profile.image ? (
                   <div className="relative h-28 w-28 shrink-0 overflow-hidden bg-neutral-100 md:h-36 md:w-36">
                     <Image
@@ -128,7 +128,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
       </div>
 
       {/* Separate row below content — one row of pills */}
-      <div className="mt-12 flex w-full flex-nowrap items-center justify-between md:mt-13 md:justify-center md:gap-10 lg:mb-10">
+      <div className="mt-12 flex w-full flex-nowrap items-center justify-between md:mt-13 md:justify-center md:gap-10">
         {pills}
       </div>
     </section>
