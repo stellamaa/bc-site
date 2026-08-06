@@ -81,8 +81,14 @@ export default function WorkSectionAlt({
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  // Sync from URL. Mobile overlay defaults to Creative Directors; desktop stays empty/inactive.
+  const useOverlayUi =
+    enabled && (forceOverlayUi || isDesktop === false);
+
+  // Sync from URL. Creative Directors default is mobile-overlay only — never on desktop.
   useEffect(() => {
+    // Desktop renders WorkSection; do not auto-apply filters or mutate the URL here.
+    if (!useOverlayUi) return;
+
     if (categoryKey) {
       const next = categoryKey.split(",");
       setAppliedSlugs(next);
@@ -90,10 +96,11 @@ export default function WorkSectionAlt({
       return;
     }
 
-    setAppliedSlugs([]);
-    setDraftSlugs([]);
-
-    if (!creativeSlug || !isOverlayViewport()) return;
+    if (!creativeSlug) {
+      setAppliedSlugs([]);
+      setDraftSlugs([]);
+      return;
+    }
 
     setAppliedSlugs([creativeSlug]);
     setDraftSlugs([creativeSlug]);
@@ -102,7 +109,14 @@ export default function WorkSectionAlt({
       params.append("category", creativeSlug);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
-  }, [categoryKey, creativeSlug, forceOverlayUi, pathname, router, searchParams]);
+  }, [
+    categoryKey,
+    creativeSlug,
+    pathname,
+    router,
+    searchParams,
+    useOverlayUi,
+  ]);
 
   const resetWorks = useCallback(() => {
     // Mobile: restore Creative Directors. Desktop: clear to inactive/empty.
@@ -222,9 +236,6 @@ export default function WorkSectionAlt({
     });
     return () => window.cancelAnimationFrame(id);
   }, [openWork?._id]);
-
-  const useOverlayUi =
-    enabled && (forceOverlayUi || isDesktop === false);
 
   if (!useOverlayUi) {
     return <WorkSection categories={categories} works={works} />;
