@@ -61,11 +61,58 @@ const about = defineType({
       validation: (rule) => rule.max(2),
     }),
     defineField({
+      name: "staff",
+      title: "Staff",
+      type: "array",
+      description:
+        "Add one or more staff members. Shown on the right of the About page as simple text (name, title, email, phone). When empty, the featured image is shown instead.",
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "staffMember",
+          title: "Staff member",
+          fields: [
+            defineField({
+              name: "name",
+              title: "Name",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "title",
+              title: "Title",
+              type: "string",
+              description: "Job title / role",
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "email",
+              title: "Email",
+              type: "string",
+              validation: (rule) => rule.required().email(),
+            }),
+            defineField({
+              name: "phone",
+              title: "Phone",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+          ],
+          preview: {
+            select: {
+              title: "name",
+              subtitle: "title",
+            },
+          },
+        }),
+      ],
+    }),
+    defineField({
       name: "featuredImage",
       title: "Featured Image",
       type: "image",
       description:
-        "Large image on the right of the About page (staff block can replace this later).",
+        "Large image on the right of the About page. Only used when Staff is empty.",
       options: { hotspot: true },
       fields: [
         defineField({ name: "alt", title: "Alt", type: "string" }),

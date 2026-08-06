@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { preloadImages } from "@/lib/introMedia";
+import Logo from "@/app/BLANK_CO.svg";
 
 export type IntroMediaItem = {
   type: "image" | "video";
@@ -166,44 +167,54 @@ export default function IntroLoader({
         ))}
       </div>
 
-      <div className="flex max-w-full items-center font-medium tracking-tight text-black uppercase text-[clamp(1.15rem,9.2vw,2.6rem)] md:text-[clamp(2.25rem,19vw,10rem)]">
-        <span>BLANK&nbsp;C</span>
+      <div className="flex max-w-full flex-col items-center gap-[0.2em] font-medium tracking-tight text-black uppercase text-[clamp(1.15rem,10.2vw,3.6rem)] md:text-[clamp(2.25rem,30vw,10rem)]">
+        <Image
+          src={Logo}
+          alt="BlankCo Logo"
+          width={808}
+          height={139}
+          unoptimized
+          className="h-[1.15em] w-auto md:h-[1em]"
+          priority
+        />
 
-        <span className="select-none leading-none">(</span>
+        <div className="flex items-center font-normal text-[clamp(0.8rem,30vw,10.5rem)] md:text-[clamp(1.5rem,20vw,20rem)]">
+          <span className="select-none leading-none">(</span>
 
-        <div
-          className={`relative mx-[0.06em] overflow-hidden bg-neutral-100 transition-[width,opacity,margin] duration-[800ms] ease-in-out ${
-            mediaOpen ? "opacity-100" : "mx-0 w-0 opacity-0"
-          }`}
-          style={
-            mediaOpen
-              ? {
-                  height: "0.8em",
-                  width: "calc(0.8em * 16 / 9)",
-                  transform: "translateY(0.08em)",
-                }
-              : {
-                  height: "0.8em",
-                  width: 0,
-                  transform: "translateY(0.08em)",
-                }
-          }
-        >
-          {current?.src ? (
-            <Image
-              key={current.src}
-              src={current.src}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="200px"
-              priority
-              unoptimized
-            />
-          ) : null}
+          <div
+            className={`relative mx-[0.06em] overflow-hidden bg-neutral-100 transition-[width,opacity,margin] duration-[800ms] ease-in-out ${
+              mediaOpen ? "opacity-100" : "mx-0 w-0 opacity-0"
+            }`}
+            style={
+              mediaOpen
+                ? {
+                    height: "0.8em",
+                    width: "calc(0.8em * 16 / 9)",
+                    transform: "translateY(0.08em)",
+                  }
+                : {
+                    height: "0.8em",
+                    width: 0,
+                    transform: "translateY(0.08em)",
+                  }
+            }
+          >
+            {current?.src ? (
+              <Image
+                key={current.src}
+                src={current.src}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="200px"
+                priority
+                unoptimized
+              />
+            ) : null}
+          </div>
+
+          <span className="select-none leading-none">)</span>
         </div>
-
-        <span className="select-none leading-none">)</span>
       </div>
     </div>
   );

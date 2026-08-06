@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import WorkExpand from "@/app/components/WorkExpand";
 import WorkSection from "@/app/components/WorkSection";
+import { shuffleArray } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
@@ -61,14 +62,16 @@ export default function WorkSectionAlt({
   const categoryParams = searchParams.getAll("category");
   const categoryKey = categoryParams.join(",");
 
-  const [appliedSlugs, setAppliedSlugs] = useState<string[]>(() => {
-    if (categoryParams.length > 0) return categoryParams;
-    return creativeSlug ? [creativeSlug] : [];
-  });
+  const [appliedSlugs, setAppliedSlugs] = useState<string[]>(() =>
+    categoryParams.length > 0 ? categoryParams : [],
+  );
   const [draftSlugs, setDraftSlugs] = useState<string[]>(appliedSlugs);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openWorkId, setOpenWorkId] = useState<string | null>(null);
   const expandRef = useRef<HTMLDivElement>(null);
+
+  const isOverlayViewport = () =>
+    forceOverlayUi || !window.matchMedia("(min-width: 768px)").matches;
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -78,7 +81,7 @@ export default function WorkSectionAlt({
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  // Sync from URL; if empty, default to Creative Directors once
+  // Sync from URL. Mobile overlay defaults to Creative Directors; desktop stays empty/inactive.
   useEffect(() => {
     if (categoryKey) {
       const next = categoryKey.split(",");
@@ -86,7 +89,12 @@ export default function WorkSectionAlt({
       setDraftSlugs(next);
       return;
     }
-    if (!creativeSlug) return;
+
+    setAppliedSlugs([]);
+    setDraftSlugs([]);
+
+    if (!creativeSlug || !isOverlayViewport()) return;
+
     setAppliedSlugs([creativeSlug]);
     setDraftSlugs([creativeSlug]);
     const params = new URLSearchParams(searchParams.toString());
@@ -94,10 +102,12 @@ export default function WorkSectionAlt({
       params.append("category", creativeSlug);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
-  }, [categoryKey, creativeSlug, pathname, router, searchParams]);
+  }, [categoryKey, creativeSlug, forceOverlayUi, pathname, router, searchParams]);
 
   const resetWorks = useCallback(() => {
-    const defaults = creativeSlug ? [creativeSlug] : [];
+    // Mobile: restore Creative Directors. Desktop: clear to inactive/empty.
+    const defaults =
+      isOverlayViewport() && creativeSlug ? [creativeSlug] : [];
     setOpenWorkId(null);
     setMenuOpen(false);
     setAppliedSlugs(defaults);
@@ -108,22 +118,19 @@ export default function WorkSectionAlt({
     const query = params.toString();
     // Stay on landing hash when resetting from BC
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [creativeSlug, pathname, router, searchParams]);
+  }, [creativeSlug, forceOverlayUi, pathname, router, searchParams]);
 
   useEffect(() => {
-    const shouldHandle = () =>
-      forceOverlayUi || !window.matchMedia("(min-width: 768px)").matches;
-
     const onSection = (event: Event) => {
       const section = (event as CustomEvent<{ section?: string }>).detail
         ?.section;
       if (!section) return;
-      if (section === "work" && shouldHandle()) {
+      if (section === "work" && isOverlayViewport()) {
         setDraftSlugs(appliedSlugs);
         setMenuOpen(true);
         return;
       }
-      // BC / landing (and other sections): close expand, reset filters to Creative Directors
+      // BC / landing: close expand + reset filters (Creative Directors on mobile, empty on desktop)
       if (section === "landing") {
         resetWorks();
       }
@@ -194,9 +201,14 @@ export default function WorkSectionAlt({
     );
   }, [works, appliedSlugs]);
 
+  const [displayWorks, setDisplayWorks] = useState(filteredWorks);
+  useEffect(() => {
+    setDisplayWorks(shuffleArray(filteredWorks));
+  }, [filteredWorks]);
+
   const openWork = useMemo(
-    () => filteredWorks.find((work) => work._id === openWorkId) ?? null,
-    [filteredWorks, openWorkId],
+    () => displayWorks.find((work) => work._id === openWorkId) ?? null,
+    [displayWorks, openWorkId],
   );
 
   useEffect(() => {
@@ -221,17 +233,17 @@ export default function WorkSectionAlt({
   return (
     <section
       id="work"
-      className="min-h-dvh scroll-mt-14 px-4 pt-4 pb-16"
+      className="min-h-dvh scroll-mt-14 px-4 pt-4 pb-3"
     >
       {menuOpen ? (
         <div
           className="fixed inset-0 z-[60] flex flex-col bg-white pt-14 pb-8"
           role="dialog"
           aria-modal="true"
-          aria-label="Work menu"
+          aria-label="Categories"
         >
-          <p className="px-4 py-3 text-center text-[10px] font-medium tracking-[0.12em] uppercase">
-            Work Menu
+          <p className="px-4 py-3 text-center text-[10px] font-medium tracking-[0.12em] uppercase text-neutral-400">
+            Categories
           </p>
           <ul className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-6 py-4">
             {categories.map((category) => {
@@ -274,7 +286,7 @@ export default function WorkSectionAlt({
         </div>
       ) : null}
 
-      <p className="mb-4 text-center text-[10px] font-medium tracking-wide uppercase">
+      <p className="mb-4 text-center text-[10px] font-bold tracking-wide uppercase">
         (selected works)
       </p>
 
@@ -287,11 +299,11 @@ export default function WorkSectionAlt({
         </div>
       ) : null}
 
-      {filteredWorks.length === 0 ? (
+      {displayWorks.length === 0 ? (
         <div className="min-h-[40vh]" aria-hidden />
       ) : (
         <ul className="grid grid-cols-2 gap-x-3 gap-y-6">
-          {filteredWorks.map((work, index) => {
+          {displayWorks.map((work, index) => {
             const n = formatIndex(index);
             const mediaKind = getWorkMediaKind(work);
             const isOpen = openWorkId === work._id;

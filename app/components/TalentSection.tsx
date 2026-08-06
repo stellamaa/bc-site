@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
+import { sortByNameAsc } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import type { Talent } from "@/types/talent";
 import type { Work } from "@/types/work";
@@ -34,9 +35,11 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
   const worksAnchorRef = useRef<HTMLDivElement>(null);
   const expandAnchorRef = useRef<HTMLDivElement>(null);
 
+  const sortedTalents = useMemo(() => sortByNameAsc(talents), [talents]);
+
   const selected = useMemo(
-    () => talents.find((t) => t.slug === selectedSlug) ?? null,
-    [talents, selectedSlug],
+    () => sortedTalents.find((t) => t.slug === selectedSlug) ?? null,
+    [sortedTalents, selectedSlug],
   );
 
   const talentWorks = useMemo(() => {
@@ -154,10 +157,10 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
       <div className="flex items-start gap-4 md:gap-16 lg:gap-24">
         <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-56 md:max-w-none">
           <p className="mb-5 w-full text-center text-[10px] font-medium tracking-[0.12em] uppercase md:text-xs">
-            Talent Menu
+            Talent
           </p>
           <ul className="flex w-full flex-col gap-4">
-            {talents.map((talent) => {
+            {sortedTalents.map((talent) => {
               if (!talent.slug) return null;
               const active = selectedSlug === talent.slug;
               return (
@@ -169,7 +172,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                         prev === talent.slug ? null : talent.slug!,
                       )
                     }
-                    className={`w-full rounded-full border border-black px-5 py-2 text-center text-[10px] font-medium leading-tight tracking-wide uppercase transition-colors md:text-base ${
+                    className={`w-full rounded-full border border-black px-5 py-2 text-center text-[10px] font-medium leading-tight  uppercase transition-colors md:text-base ${
                       active
                         ? "bg-black text-white"
                         : "bg-white text-black hover:bg-neutral-100"
@@ -201,7 +204,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
 
               {/* Profile — hide on desktop while a project is expanded */}
               <div
-                className={`flex flex-row items-start gap-4 md:gap-8 ${
+                className={`flex flex-row items-start gap-4 md:mt-15 md:gap-8 ${
                   openWork ? "md:hidden" : ""
                 }`}
               >
@@ -226,9 +229,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                     <div className="text-xs leading-[1.2] font-normal text-black md:text-base">
                       <p
                         className={`whitespace-pre-line ${
-                          bioExpanded
-                            ? ""
-                            : "line-clamp-4 md:line-clamp-none"
+                          bioExpanded ? "" : "line-clamp-6"
                         }`}
                       >
                         {selected.bio}
@@ -237,7 +238,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                         <button
                           type="button"
                           onClick={() => setBioExpanded((open) => !open)}
-                          className="mt-1 font-medium md:hidden"
+                          className="mt-1 font-medium"
                         >
                           {bioExpanded ? "Read less" : "Read more"}
                         </button>

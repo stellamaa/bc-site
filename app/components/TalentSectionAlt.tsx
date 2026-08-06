@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
+import { sortByNameAsc } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import {
   getTalentLayoutFromEnv,
@@ -70,8 +71,19 @@ export default function TalentSectionAlt({
   const [openWorkId, setOpenWorkId] = useState<string | null>(null);
   const expandRef = useRef<HTMLDivElement>(null);
 
-  const openMenu = () => setMenuOpen(true);
   const closeMenu = () => setMenuOpen(false);
+
+  const dismissMenuWithoutSelection = () => {
+    closeMenu();
+    if (selectedSlug) return;
+    window.history.replaceState(null, "", "/#landing");
+    document
+      .getElementById("landing")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.dispatchEvent(
+      new CustomEvent("bc:section", { detail: { section: "landing" } }),
+    );
+  };
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -125,18 +137,20 @@ export default function TalentSectionAlt({
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeMenu();
+      if (event.key === "Escape") dismissMenuWithoutSelection();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [menuOpen]);
+  }, [menuOpen, selectedSlug]);
+
+  const sortedTalents = useMemo(() => sortByNameAsc(talents), [talents]);
 
   const selected = useMemo(
-    () => talents.find((t) => t.slug === selectedSlug) ?? null,
-    [talents, selectedSlug],
+    () => sortedTalents.find((t) => t.slug === selectedSlug) ?? null,
+    [sortedTalents, selectedSlug],
   );
 
   const talentWorks = useMemo(() => {
@@ -168,7 +182,10 @@ export default function TalentSectionAlt({
     return () => window.cancelAnimationFrame(id);
   }, [openWork?._id]);
 
-  const columns = useMemo(() => columnizeTalents(talents), [talents]);
+  const columns = useMemo(
+    () => columnizeTalents(sortedTalents),
+    [sortedTalents],
+  );
   const workPages = chunkItems(talentWorks, 4);
 
   const useOverlayUi =
@@ -182,21 +199,22 @@ export default function TalentSectionAlt({
   return (
     <section
       id="talent"
-      className="relative min-h-dvh scroll-mt-14 px-4 pt-4 pb-16"
+      className={
+        selected
+          ? "relative min-h-dvh scroll-mt-14 px-4 pt-4 pb-2"
+          : "relative scroll-mt-14"
+      }
     >
-      <p className="mb-4 text-center text-[10px] font-medium tracking-wide uppercase">
-        (talent)
-      </p>
       {/* Name picker overlay — only while open; does not mount on initial page load */}
       {menuOpen ? (
         <div
           className="fixed inset-0 z-[60] flex flex-col bg-white pt-14 pb-10"
           role="dialog"
           aria-modal="true"
-          aria-label="Talent menu"
+          aria-label="Talent"
         >
           <p className="px-4 py-3 text-center text-[10px] font-medium tracking-[0.12em] uppercase">
-            Talent Menu
+            Talent
           </p>
           <div className="flex min-h-0 flex-1 items-start justify-between gap-3 overflow-y-auto px-4 pt-4">
             {columns.map((col, colIndex) => (
@@ -231,7 +249,7 @@ export default function TalentSectionAlt({
           </div>
           <button
             type="button"
-            onClick={closeMenu}
+            onClick={dismissMenuWithoutSelection}
             className="mt-6 pb-2 text-center text-[10px] font-medium tracking-wide uppercase"
             aria-label="Close talent menu"
           >
@@ -240,18 +258,12 @@ export default function TalentSectionAlt({
         </div>
       ) : null}
 
-      {!selected ? (
-        <div className="flex min-h-[50vh] flex-col items-center justify-center">
-          <button
-            type="button"
-            onClick={openMenu}
-            className="rounded-full border border-black px-5 py-2 text-[10px] font-medium tracking-wide uppercase"
-          >
-            Talent Menu
-          </button>
-        </div>
-      ) : (
+      {/* Profile + works only after a talent is chosen from the nav */}
+      {selected ? (
         <div className="flex flex-col gap-6">
+          <p className="mb-0 text-center text-[10px] font-bold tracking-wide uppercase">
+            (talent)
+          </p>
           {/* Profile: image top-left, bio underneath */}
           <div className="flex flex-col gap-3">
             <div className="relative size-[7rem] overflow-hidden bg-neutral-100">
@@ -368,7 +380,7 @@ export default function TalentSectionAlt({
             </div>
           ) : null}
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

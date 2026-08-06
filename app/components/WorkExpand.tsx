@@ -20,11 +20,13 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const gallery = getGalleryImages(work);
 
   const [playing, setPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     setPlaying(false);
+    setIsPaused(true);
     setGalleryIndex(0);
     if (videoRef.current) {
       videoRef.current.pause();
@@ -45,15 +47,30 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const canPrev = galleryIndex > 0;
   const canNext = galleryIndex < gallery.length - 1;
 
+  const showPlayOverlay =
+    mediaKind === "video" &&
+    video &&
+    (!playing || (video.kind === "file" && isPaused));
+
+  const showPauseHitTarget =
+    mediaKind === "video" &&
+    video?.kind === "file" &&
+    playing &&
+    !isPaused;
+
   const handlePlay = async () => {
     setPlaying(true);
     if (video?.kind === "file" && videoRef.current) {
       try {
         await videoRef.current.play();
       } catch {
-        // Autoplay may still be blocked; controls remain available.
+        // Autoplay may still be blocked.
       }
     }
+  };
+
+  const handlePause = () => {
+    videoRef.current?.pause();
   };
 
   return (
@@ -78,8 +95,13 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
                 poster={poster}
                 className={`absolute inset-0 h-full w-full object-cover ${playing ? "" : "pointer-events-none"}`}
                 playsInline
-                controls={playing}
-                onEnded={() => setPlaying(false)}
+                controls={false}
+                onPlay={() => setIsPaused(false)}
+                onPause={() => setIsPaused(true)}
+                onEnded={() => {
+                  setPlaying(false);
+                  setIsPaused(true);
+                }}
               />
             ) : null}
 
@@ -94,15 +116,29 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               />
             ) : null}
 
-            {!playing ? (
+            {showPlayOverlay ? (
               <button
                 type="button"
                 onClick={handlePlay}
-                className="absolute inset-0 z-10 flex items-center justify-center font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[80cqh] leading-none"
+                className="absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[80cqh] leading-none md:pb-20"
                 aria-label="Play video"
               >
-                {"(>)"}
+                {/* Mobile: (||) only after a real pause; before start use (>). Desktop always (>). */}
+                <span className="md:hidden">
+                  {playing && isPaused ? "(||)" : "(>)"}
+                </span>
+                <span className="hidden md:inline">{"(>)"}</span>
               </button>
+            ) : null}
+
+            {/* Invisible while playing — tap/click still pauses, no symbol */}
+            {showPauseHitTarget ? (
+              <button
+                type="button"
+                onClick={handlePause}
+                className="absolute inset-0 z-10"
+                aria-label="Pause video"
+              />
             ) : null}
           </>
         ) : null}
@@ -132,7 +168,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-1 right-2 z-20 text-3xl font-medium tracking-wide text-white drop-shadow transition-opacity hover:opacity-80 md:-top-2 md:right-3 md:text-4xl"
+          className="absolute -top-1 right-2 z-20 text-3xl font-medium tracking-wide text-white drop-shadow transition-opacity hover:opacity-80 md:-top-0 md:right-3 md:text-4xl"
           aria-label="Close project"
         >
           (X)

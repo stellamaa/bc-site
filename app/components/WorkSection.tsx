@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
+import { shuffleArray } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
@@ -86,16 +87,22 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
     );
   }, [works, selectedSlugs]);
 
+  // Randomize on load / when the filtered set changes (client-only)
+  const [displayWorks, setDisplayWorks] = useState(filteredWorks);
+  useEffect(() => {
+    setDisplayWorks(shuffleArray(filteredWorks));
+  }, [filteredWorks]);
+
   const openWork = useMemo(
-    () => filteredWorks.find((work) => work._id === openWorkId) ?? null,
-    [filteredWorks, openWorkId],
+    () => displayWorks.find((work) => work._id === openWorkId) ?? null,
+    [displayWorks, openWorkId],
   );
 
   useEffect(() => {
-    if (openWorkId && !filteredWorks.some((work) => work._id === openWorkId)) {
+    if (openWorkId && !displayWorks.some((work) => work._id === openWorkId)) {
       setOpenWorkId(null);
     }
-  }, [filteredWorks, openWorkId]);
+  }, [displayWorks, openWorkId]);
 
   useEffect(() => {
     if (!openWork) return;
@@ -133,19 +140,19 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
     return () => window.removeEventListener("bc:section", onSection);
   }, []);
 
-  const canScroll = filteredWorks.length > 6;
+  const canScroll = displayWorks.length > 6;
   /** Desktop + expanded: single-row strip so other projects stay reachable */
   const stripLayout = Boolean(openWork) && isDesktop;
   /** Desktop + closed: existing 3×2 paged scroll when there are enough works */
   const desktopPageScroll = !stripLayout && canScroll && isDesktop;
   /** Mobile: 2×3 pages when there are more than 6 works */
   const mobilePageScroll =
-    !stripLayout && !isDesktop && filteredWorks.length > 6;
+    !stripLayout && !isDesktop && displayWorks.length > 6;
   const pageScrollLayout = desktopPageScroll || mobilePageScroll;
   const horizontalScroll = stripLayout || pageScrollLayout;
   const workPages = pageScrollLayout
-    ? chunkWorks(filteredWorks, 6)
-    : [filteredWorks];
+    ? chunkWorks(displayWorks, 6)
+    : [displayWorks];
 
   useEffect(() => {
     if (!stripLayout || !openWorkId) return;
@@ -189,8 +196,8 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
               : "row-start-1"
           }`}
         >
-          <p className="mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] md:text-xs">
-            Work Menu
+          <p className="mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:text-xs">
+            Categories
           </p>
           <ul className="flex w-max max-w-full flex-col gap-3 md:w-full md:gap-4">
             {categories.map((category) => {
@@ -220,7 +227,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
             stripLayout ? "md:pl-12" : ""
           }`}
         >
-          {filteredWorks.length === 0 ? (
+          {displayWorks.length === 0 ? (
             <div className="min-h-[40vh]" aria-hidden />
           ) : (
             <>
@@ -236,7 +243,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
               >
                 {stripLayout ? (
                   <ul className="flex w-max flex-nowrap gap-x-10">
-                    {filteredWorks.map((work, index) => {
+                    {displayWorks.map((work, index) => {
                       const n = formatIndex(index);
                       const mediaKind = getWorkMediaKind(work);
                       const isOpen = openWorkId === work._id;
@@ -411,7 +418,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
               <ScrollTrack
                 scrollRef={scrollRef}
                 visible={horizontalScroll}
-                itemCount={filteredWorks.length}
+                itemCount={displayWorks.length}
                 width={stripLayout ? "full" : "half"}
               />
             </>

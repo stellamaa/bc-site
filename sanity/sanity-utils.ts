@@ -91,6 +91,13 @@ const aboutProjection = groq`{
     "image": image.asset->url,
     "imageAlt": image.alt
   },
+  staff[]{
+    _key,
+    name,
+    title,
+    email,
+    phone
+  },
   "featuredImage": featuredImage.asset->url,
   "featuredImageAlt": featuredImage.alt,
   phone,

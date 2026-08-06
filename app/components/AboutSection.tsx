@@ -13,6 +13,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
   const {
     description,
     profiles = [],
+    staff,
     featuredImage,
     featuredImageAlt,
     phone,
@@ -21,6 +22,9 @@ export default function AboutSection({ about }: AboutSectionProps) {
     instagram,
     linkedin,
   } = about;
+
+  const staffList = staff ?? [];
+  const hasStaff = staffList.length > 0;
 
   const pillClass =
     "shrink-0 rounded-full bg-black px-5 py-0.7 text-center text-lg font-medium tracking-wide text-white uppercase transition-opacity hover:opacity-80 md:px-16 md:py-4 md:text-2xl";
@@ -60,7 +64,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
       id="about"
       className="scroll-mt-14 px-4 pt-4 pb-6 md:scroll-mt-24 md:px-8 md:pt-2 md:pb-8 lg:px-10 lg:pt-10 lg:pb-8"
     >
-      <p className="mb-4 text-center text-[10px] font-medium tracking-wide uppercase md:hidden">
+      <p className="mb-4 text-center text-[10px] font-bold tracking-wide uppercase md:hidden">
         (About us)
       </p>
       <div className="grid grid-cols-1 items-stretch gap-10 md:grid-cols-2 md:gap-12 lg:gap-16">
@@ -73,23 +77,23 @@ export default function AboutSection({ about }: AboutSectionProps) {
 
           {profiles.map((profile) => (
             <article key={profile._key} className="flex flex-col gap-3 md:gap-0">
-              <div className="flex flex-row items-center gap-4 md:gap-6">
+              <div className="flex flex-row items-start gap-4 md:gap-6">
                 {profile.image ? (
-                  <div className="relative h-28 w-28 shrink-0 overflow-hidden bg-neutral-100 md:h-36 md:w-36">
+                  <div className="relative mt-1 h-28 w-28 shrink-0 overflow-hidden bg-neutral-100 md:mt-1.5 md:h-36 md:w-36">
                     <Image
                       src={profile.image}
                       alt={profile.imageAlt || profile.name || "Profile"}
                       fill
-                      className="object-cover grayscale"
+                      className="object-cover object-top grayscale"
                       sizes="144px"
                     />
                   </div>
                 ) : (
-                  <div className="h-28 w-28 shrink-0 bg-neutral-100 md:h-36 md:w-36" />
+                  <div className="mt-1 h-28 w-28 shrink-0 bg-neutral-100 md:mt-1.5 md:h-36 md:w-36" />
                 )}
                 {profile.bio ? (
-                  <p className="min-w-0 flex-1 text-xs font-normal leading-normal whitespace-pre-line md:w-1/2 md:flex-none md:text-sm">
-                    {profile.bio}
+                  <p className="min-w-0 flex-1 text-xs font-normal leading-[1.2] whitespace-pre-line md:w-1/2 md:flex-none md:text-sm">
+                    {profile.bio.trim()}
                   </p>
                 ) : null}
               </div>
@@ -113,8 +117,33 @@ export default function AboutSection({ about }: AboutSectionProps) {
           </div>
         </div>
 
-        {/* Desktop: image matches left column height */}
-        {featuredImage ? (
+        {/* Staff replaces featured image when present */}
+        {hasStaff ? (
+          <div className="flex flex-col gap-8 text-sm font-normal md:text-base">
+            {staffList.map((member) => (
+              <div key={member._key} className="flex flex-col gap-1">
+                {member.name ? <p>{member.name}</p> : null}
+                {member.title ? <p>{member.title}</p> : null}
+                {member.email ? (
+                  <a
+                    href={`mailto:${member.email}`}
+                    className="transition-opacity hover:opacity-60"
+                  >
+                    {member.email}
+                  </a>
+                ) : null}
+                {member.phone ? (
+                  <a
+                    href={`tel:${member.phone.replace(/\s+/g, "")}`}
+                    className="transition-opacity hover:opacity-60"
+                  >
+                    {member.phone}
+                  </a>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : featuredImage ? (
           <div className="relative hidden min-h-full w-full overflow-hidden bg-neutral-100 md:block">
             <Image
               src={featuredImage}
