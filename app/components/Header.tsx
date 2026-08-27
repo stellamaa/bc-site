@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { documentUrl } from "@/lib/documentUrl";
 
 type SectionId = "landing" | "work" | "talent" | "about" | "contact";
 
@@ -58,6 +59,16 @@ export default function Header({ className = "" }: HeaderProps) {
         }
       }
 
+      // Contact is nested at the end of About — it often can't reach the
+      // marker. Prefer CONTACT once the block is in the lower viewport.
+      const contactEl = document.getElementById("contact");
+      if (contactEl) {
+        const rect = contactEl.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
+          current = "contact";
+        }
+      }
+
       setActiveSection(current);
     };
 
@@ -77,7 +88,8 @@ export default function Header({ className = "" }: HeaderProps) {
         return;
       }
       e.preventDefault();
-      window.history.replaceState(null, "", `/#${section}`);
+      // Preserve basePath (e.g. /bc-site/) — `/#section` would jump to host root.
+      window.history.replaceState(null, "", documentUrl("", section));
       scrollToId(section);
       setActiveSection(section);
       window.dispatchEvent(

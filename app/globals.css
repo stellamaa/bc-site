@@ -9,6 +9,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-founders), system-ui, sans-serif;
+  /* ~2000px — for optional 3xl: utilities; laptop/smaller unchanged */
+  --breakpoint-3xl: 125rem;
 }
 
 body {
@@ -17,15 +19,33 @@ body {
   font-family: var(--font-sans);
 }
 
+/*
+  2K+ (2000px): bump root rem so Tailwind rem utilities (text-*, p-*, gap-*)
+  read clearly larger than the 16px laptop baseline.
+
+  Previous formula (16px * 100vw / 1440) was only ~22.2px at 2000 (~1.39×) —
+  easy to miss. Now ~24px at 2000 (1.5×) and keeps scaling with viewport
+  (e.g. ~30.7px at 2560). Media-query rem uses the initial 16px, so Tailwind
+  breakpoints stay fixed. Absolute px classes (text-[10px], text-[11px]) do not
+  scale; md+ Header/LandingHero use rem (text-2xl, text-7xl, etc.) and do.
+*/
+@media (min-width: 2000px) {
+  html {
+    font-size: calc(24px * 100vw / 2000px);
+  }
+}
+
 /* Hide native scrollbar — custom ScrollTrack is used instead */
 .work-works-scroll,
-.talent-works-scroll {
+.talent-works-scroll,
+.talent-names-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 .work-works-scroll::-webkit-scrollbar,
-.talent-works-scroll::-webkit-scrollbar {
+.talent-works-scroll::-webkit-scrollbar,
+.talent-names-scroll::-webkit-scrollbar {
   display: none;
 }
 

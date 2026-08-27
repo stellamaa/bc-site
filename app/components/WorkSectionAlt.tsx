@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import WorkExpand from "@/app/components/WorkExpand";
 import WorkSection from "@/app/components/WorkSection";
+import { documentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
@@ -45,8 +46,6 @@ export default function WorkSectionAlt({
   enabled = true,
 }: Props) {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const forceOverlayUi = searchParams.get("workOverlay") === "1";
 
   const [isDesktop, setIsDesktop] = useState<boolean | null>(() => {
@@ -107,13 +106,15 @@ export default function WorkSectionAlt({
     const params = new URLSearchParams(searchParams.toString());
     if (!params.getAll("category").length) {
       params.append("category", creativeSlug);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      window.history.replaceState(
+        null,
+        "",
+        documentUrl(params.toString()),
+      );
     }
   }, [
     categoryKey,
     creativeSlug,
-    pathname,
-    router,
     searchParams,
     useOverlayUi,
   ]);
@@ -131,8 +132,8 @@ export default function WorkSectionAlt({
     for (const slug of defaults) params.append("category", slug);
     const query = params.toString();
     // Stay on landing hash when resetting from BC
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [creativeSlug, forceOverlayUi, pathname, router, searchParams]);
+    window.history.replaceState(null, "", documentUrl(query));
+  }, [creativeSlug, forceOverlayUi, searchParams]);
 
   useEffect(() => {
     const onSection = (event: Event) => {
@@ -176,11 +177,9 @@ export default function WorkSectionAlt({
       params.delete("category");
       for (const slug of slugs) params.append("category", slug);
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}#work` : `${pathname}#work`, {
-        scroll: false,
-      });
+      window.history.replaceState(null, "", documentUrl(query, "work"));
     },
-    [pathname, router, searchParams],
+    [searchParams],
   );
 
   const toggleDraft = (slug: string) => {

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { PortableTextBlock } from "sanity";
 import PortableText from "@/app/components/PortableText";
+import { documentUrl } from "@/lib/documentUrl";
 import type { Category } from "@/types/category";
 
 type LandingHeroProps = {
@@ -15,8 +15,6 @@ export default function LandingHero({
   description,
   categories,
 }: LandingHeroProps) {
-  const router = useRouter();
-
   return (
     <div className="hidden md:flex flex-1 flex-col items-center justify-center px-8 min-h-0">
       {categories.length > 0 ? (
@@ -33,9 +31,16 @@ export default function LandingHero({
                 onClick={(e) => {
                   if (!category.slug) return;
                   e.preventDefault();
-                  router.push(`/?category=${category.slug}#work`, {
-                    scroll: false,
-                  });
+                  // history + pathname keeps basePath; router.push same-path
+                  // query updates are unreliable on static export (GitHub Pages).
+                  window.history.pushState(
+                    null,
+                    "",
+                    documentUrl(
+                      `category=${encodeURIComponent(category.slug)}`,
+                      "work",
+                    ),
+                  );
                   requestAnimationFrame(() => {
                     document
                       .getElementById("work")

@@ -75,7 +75,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
 
   return (
     <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-1 md:ml-12">
-      <div className="relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
+      <div className="group relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
         {mediaKind === "video" && video ? (
           <>
             {video.kind === "youtube" && playing ? (
@@ -123,22 +123,24 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
                 className="absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[80cqh] leading-none md:pb-20"
                 aria-label="Play video"
               >
-                {/* Mobile: (||) only after a real pause; before start use (>). Desktop always (>). */}
-                <span className="md:hidden">
-                  {playing && isPaused ? "(||)" : "(>)"}
-                </span>
-                <span className="hidden md:inline">{"(>)"}</span>
+                {/* Mobile: (||) only after a real pause; before start use (>).
+                    Desktop: (||) when paused mid-play; (>) before first play. */}
+                <span>{playing && isPaused ? "(||)" : "(>)"}</span>
               </button>
             ) : null}
 
-            {/* Invisible while playing — tap/click still pauses, no symbol */}
+            {/* Playing: mobile invisible hit target; desktop shows (||) on hover */}
             {showPauseHitTarget ? (
               <button
                 type="button"
                 onClick={handlePause}
-                className="absolute inset-0 z-10"
+                className="absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity text-[80cqh] leading-none md:pb-20"
                 aria-label="Pause video"
-              />
+              >
+                <span className="opacity-0 md:group-hover:opacity-100">
+                  (||)
+                </span>
+              </button>
             ) : null}
           </>
         ) : null}
@@ -216,7 +218,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
       ) : null}
 
       {work.description ? (
-        <p className="mt-3 max-w-2xl text-sm font-normal leading-snug whitespace-pre-line md:mt-3 md:line-clamp-4 md:text-sm md:leading-snug">
+        <p className="mt-3 max-w-2xl text-sm font-normal leading-snug whitespace-pre-line md:mt-2 md:w-[48%] md:max-w-[46rem] md:text-center md:leading-tight md:line-clamp-4 md:text-sm lg:w-[82%] lg:max-w-[62rem]">
           {work.description}
         </p>
       ) : null}

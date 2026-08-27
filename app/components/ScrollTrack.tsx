@@ -7,33 +7,49 @@ type ScrollTrackProps = {
   visible: boolean;
   /** Recompute when list length changes */
   itemCount?: number;
-  /** Track width relative to the content area */
+  /** Track width relative to the content area (horizontal only) */
   width?: "half" | "full";
+  orientation?: "horizontal" | "vertical";
 };
 
-/** Grey track with black thumb synced to horizontal scroll. */
+/** Grey track with black thumb synced to scroll position. */
 export default function ScrollTrack({
   scrollRef,
   visible,
   itemCount,
   width = "half",
+  orientation = "horizontal",
 }: ScrollTrackProps) {
-  const [thumb, setThumb] = useState({ left: 0, width: 100 });
+  const isVertical = orientation === "vertical";
+  const [thumb, setThumb] = useState({ offset: 0, size: 100 });
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || !visible) return;
 
     const update = () => {
+      if (isVertical) {
+        const { scrollTop, scrollHeight, clientHeight } = el;
+        const max = scrollHeight - clientHeight;
+        if (max <= 0 || scrollHeight <= 0) {
+          setThumb({ offset: 0, size: 100 });
+          return;
+        }
+        const size = (clientHeight / scrollHeight) * 100;
+        const offset = (scrollTop / max) * (100 - size);
+        setThumb({ offset, size });
+        return;
+      }
+
       const { scrollLeft, scrollWidth, clientWidth } = el;
       const max = scrollWidth - clientWidth;
       if (max <= 0 || scrollWidth <= 0) {
-        setThumb({ left: 0, width: 100 });
+        setThumb({ offset: 0, size: 100 });
         return;
       }
-      const thumbWidth = (clientWidth / scrollWidth) * 100;
-      const left = (scrollLeft / max) * (100 - thumbWidth);
-      setThumb({ left, width: thumbWidth });
+      const size = (clientWidth / scrollWidth) * 100;
+      const offset = (scrollLeft / max) * (100 - size);
+      setThumb({ offset, size });
     };
 
     update();
@@ -44,18 +60,49 @@ export default function ScrollTrack({
       el.removeEventListener("scroll", update);
       ro.disconnect();
     };
-  }, [scrollRef, visible, itemCount]);
+  }, [scrollRef, visible, itemCount, isVertical]);
 
   if (!visible) return null;
 
-  const seek = (clientX: number, target: HTMLElement) => {
+  const seek = (clientPos: number, target: HTMLElement) => {
     const el = scrollRef.current;
     if (!el) return;
     const rect = target.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    if (isVertical) {
+      const ratio = Math.min(
+        1,
+        Math.max(0, (clientPos - rect.top) / rect.height),
+      );
+      const max = el.scrollHeight - el.clientHeight;
+      el.scrollTo({ top: ratio * max, behavior: "smooth" });
+      return;
+    }
+    const ratio = Math.min(
+      1,
+      Math.max(0, (clientPos - rect.left) / rect.width),
+    );
     const max = el.scrollWidth - el.clientWidth;
     el.scrollTo({ left: ratio * max, behavior: "smooth" });
   };
+
+  if (isVertical) {
+    return (
+      <div
+        className="hidden h-full shrink-0 items-center md:flex"
+        aria-hidden
+      >
+        <div
+          className="relative h-1/3 w-px cursor-pointer bg-neutral-300"
+          onClick={(e) => seek(e.clientY, e.currentTarget)}
+        >
+          <div
+            className="absolute left-0 w-px bg-black transition-[top,height] duration-75"
+            style={{ top: `${thumb.offset}%`, height: `${thumb.size}%` }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -70,7 +117,7 @@ export default function ScrollTrack({
       >
         <div
           className="absolute top-0 h-px bg-black transition-[left,width] duration-75"
-          style={{ left: `${thumb.left}%`, width: `${thumb.width}%` }}
+          style={{ left: `${thumb.offset}%`, width: `${thumb.size}%` }}
         />
       </div>
     </div>

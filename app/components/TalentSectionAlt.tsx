@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
+import { documentUrl } from "@/lib/documentUrl";
 import { sortByNameAsc } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import {
@@ -76,7 +77,7 @@ export default function TalentSectionAlt({
   const dismissMenuWithoutSelection = () => {
     closeMenu();
     if (selectedSlug) return;
-    window.history.replaceState(null, "", "/#landing");
+    window.history.replaceState(null, "", documentUrl("", "landing"));
     document
       .getElementById("landing")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -213,7 +214,7 @@ export default function TalentSectionAlt({
           aria-modal="true"
           aria-label="Talent"
         >
-          <p className="px-4 py-3 text-center text-[10px] font-medium tracking-[0.12em] uppercase">
+          <p className="px-4 py-3 text-center text-[10px] font-medium tracking-[0.12em] uppercase text-neutral-400">
             Talent
           </p>
           <div className="flex min-h-0 flex-1 items-start justify-between gap-3 overflow-y-auto px-4 pt-4">

@@ -33,7 +33,7 @@ const talent = defineType({
       title: "Bio",
       type: "text",
       rows: 8,
-      validation: (rule) => rule.required(),
+      description: "Optional. Talent can be published without a bio.",
     }),
     defineField({
       name: "categories",
@@ -46,7 +46,6 @@ const talent = defineType({
           to: [{ type: "category" }],
         }),
       ],
-      validation: (rule) => rule.required().min(1),
     }),
   ],
   preview: {

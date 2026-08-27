@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
+import { documentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
@@ -29,8 +30,6 @@ function chunkWorks<T>(items: T[], size: number): T[][] {
 
 export default function WorkSection({ categories, works }: WorkSectionProps) {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const categoryParams = searchParams.getAll("category");
   const categoryKey = categoryParams.join(",");
 
@@ -60,11 +59,9 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
       params.delete("category");
       for (const slug of slugs) params.append("category", slug);
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}#work` : `${pathname}#work`, {
-        scroll: false,
-      });
+      window.history.replaceState(null, "", documentUrl(query, "work"));
     },
-    [pathname, router, searchParams],
+    [searchParams],
   );
 
   const toggleCategory = (slug: string) => {
@@ -230,7 +227,13 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
           {displayWorks.length === 0 ? (
             <div className="min-h-[40vh]" aria-hidden />
           ) : (
-            <>
+            <div
+              className={
+                stripLayout
+                  ? "md:max-w-[calc(6*9rem+5*2.5rem)] lg:max-w-[calc(6*9.5rem+5*2.5rem)]"
+                  : undefined
+              }
+            >
               <div
                 ref={horizontalScroll ? scrollRef : undefined}
                 className={
@@ -402,9 +405,9 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                               ) : (
                                 <div className="aspect-square w-full bg-neutral-100" />
                               )}
-                              {work.description ? (
-                                <p className="line-clamp-5 text-xs font-normal leading-snug text-black md:text-sm">
-                                  {work.description}
+                              {work.title ? (
+                                <p className="line-clamp-2 text-xs font-normal text-center leading-snug text-black md:text-sm">
+                                  {work.title}
                                 </p>
                               ) : null}
                             </button>
@@ -417,11 +420,15 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
               </div>
               <ScrollTrack
                 scrollRef={scrollRef}
-                visible={horizontalScroll}
+                visible={
+                  stripLayout
+                    ? displayWorks.length > 6
+                    : pageScrollLayout
+                }
                 itemCount={displayWorks.length}
                 width={stripLayout ? "full" : "half"}
               />
-            </>
+            </div>
           )}
         </div>
       </div>
