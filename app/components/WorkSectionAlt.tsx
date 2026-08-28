@@ -314,7 +314,7 @@ export default function WorkSectionAlt({
         <div className="min-h-[40vh]" aria-hidden />
       ) : (
         <>
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-6">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-6">
             {visibleWorks.map((work, index) => {
               const n = formatIndex(index);
               const mediaKind = getWorkMediaKind(work);
@@ -341,20 +341,21 @@ export default function WorkSectionAlt({
                     <span className="text-xs font-medium tabular-nums text-black">
                       ({n})
                     </span>
-                    <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
+                    <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-neutral-100">
                       {work.thumbnail ? (
                         <Image
                           src={work.thumbnail}
                           alt={work.thumbnailAlt || work.title || "Work"}
                           fill
-                          className="object-cover"
-                          sizes="40vw"
+                          className="object-cover object-center"
+                          style={{ objectFit: "cover" }}
+                          sizes="50vw"
                           loading={index < 4 ? "eager" : "lazy"}
                           priority={index < 4}
                         />
                       ) : null}
                       {overlayLabel ? (
-                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-bold tracking-wide text-white uppercase drop-shadow">
+                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-2xl font-bold tracking-wide text-white uppercase drop-shadow">
                           {overlayLabel}
                         </span>
                       ) : null}

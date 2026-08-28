@@ -13,8 +13,8 @@ type ScrollTrackProps = {
   /** Horizontal: below content (default) or overlaid mid */
   placement?: "below" | "mid";
   /**
-   * Horizontal: fixed inset so the track starts at the end of the first
-   * thumbnail and ends at the start of the last (does not move with paging).
+   * Horizontal: track spans the thumbnail block — from the start of the
+   * first thumb to the end of the last (fixed; does not move with paging).
    */
   insetEnds?: boolean;
 };
@@ -92,13 +92,13 @@ export default function ScrollTrack({
         items[items.length - 1]!.querySelector<HTMLElement>("button") ??
         items[items.length - 1]!;
 
-      // Relative to the page box so values stay stable while paging
+      // Outer edges of first → last thumbnail (stable while paging)
       const pageRect = page.getBoundingClientRect();
       const first = firstEl.getBoundingClientRect();
       const last = lastEl.getBoundingClientRect();
       setEnds({
-        left: Math.max(0, first.right - pageRect.left),
-        right: Math.max(0, pageRect.right - last.left),
+        left: Math.max(0, first.left - pageRect.left),
+        right: Math.max(0, pageRect.right - last.right),
       });
     };
 
@@ -134,11 +134,11 @@ export default function ScrollTrack({
   if (isVertical) {
     return (
       <div
-        className="hidden h-full shrink-0 items-center justify-center md:flex"
+        className="hidden h-full shrink-0 items-stretch pl-2 md:flex"
         aria-hidden
       >
         <div
-          className="relative h-3/5 w-[2px] cursor-pointer bg-neutral-300"
+          className="relative h-full w-[2px] cursor-pointer bg-neutral-300"
           onClick={(e) => seek(e.clientY, e.currentTarget)}
         >
           <div
@@ -152,11 +152,11 @@ export default function ScrollTrack({
 
   const track = (
     <div
-      className="relative h-px w-full cursor-pointer bg-neutral-300"
+      className="relative h-[2px] w-full cursor-pointer bg-neutral-300"
       onClick={(e) => seek(e.clientX, e.currentTarget)}
     >
       <div
-        className="absolute top-0 h-px bg-black transition-[left,width] duration-75"
+        className="absolute top-0 h-[2px] bg-black transition-[left,width] duration-75"
         style={{ left: `${thumb.offset}%`, width: `${thumb.size}%` }}
       />
     </div>

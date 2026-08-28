@@ -157,12 +157,12 @@ export default function IntroLoader({
             style={
               mediaOpen
                 ? {
-                    height: "0.8em",
-                    width: "calc(0.8em * 16 / 9)",
+                    height: "0.75em",
+                    width: "calc(0.75em * 16 / 9)",
                     transform: "translateY(0.08em)",
                   }
                 : {
-                    height: "0.8em",
+                    height: "0.75em",
                     width: 0,
                     transform: "translateY(0.08em)",
                   }

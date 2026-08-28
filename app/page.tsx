@@ -4,7 +4,7 @@ import AboutSection from "@/app/components/AboutSection";
 import ContactSection from "@/app/components/ContactSection";
 import IntroLoader from "@/app/components/IntroLoader";
 import LandingHero from "@/app/components/LandingHero";
-import PortableText from "@/app/components/PortableText";
+import LandingMobileCopy from "@/app/components/LandingMobileCopy";
 import SectionPager from "@/app/components/SectionPager";
 import TalentSectionSwitch from "@/app/components/TalentSectionSwitch";
 import WorkSectionSwitch from "@/app/components/WorkSectionSwitch";
@@ -52,10 +52,7 @@ export default async function Home() {
               BLANK C()
             </h1>
             {description && description.length > 0 ? (
-              <PortableText
-                value={description}
-                className="mx-auto mb-2 max-w-md text-center text-sm font-normal leading-relaxed text-black"
-              />
+              <LandingMobileCopy description={description} />
             ) : null}
           </div>
 

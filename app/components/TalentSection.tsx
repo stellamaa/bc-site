@@ -215,7 +215,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
             Talent
           </p>
           <div
-            className={`flex min-h-0 w-full items-stretch gap-3 md:col-start-1 md:row-start-2 ${
+            className={`flex min-h-0 w-full items-stretch gap-4 md:col-start-1 md:row-start-2 md:gap-5 ${
               namesScroll ? "shrink-0" : "flex-1"
             }`}
             style={

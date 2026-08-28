@@ -87,6 +87,7 @@ const aboutProjection = groq`{
   profiles[]{
     _key,
     name,
+    role,
     bio,
     "image": image.asset->url,
     "imageAlt": image.alt

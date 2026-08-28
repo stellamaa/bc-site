@@ -65,7 +65,7 @@ export default function AboutProfiles({ profiles }: AboutProfilesProps) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col gap-6 md:gap-3 lg:gap-4">
+    <div className="flex flex-col gap-6 md:gap-3">
       {profiles.map((profile) => {
         const bio = profile.bio?.trim() ?? "";
 
@@ -76,7 +76,7 @@ export default function AboutProfiles({ profiles }: AboutProfilesProps) {
           >
             <div className="flex flex-row items-start gap-3 md:gap-4">
               {profile.image ? (
-                <div className="relative mt-0.5 h-24 w-24 shrink-0 overflow-hidden bg-neutral-100 md:h-24 md:w-24 lg:h-28 lg:w-28">
+                <div className="relative mt-0.5 h-24 w-24 shrink-0 overflow-hidden bg-neutral-100 md:h-24 md:w-24 lg:h-28 lg:w-24">
                   <Image
                     src={profile.image}
                     alt={profile.imageAlt || profile.name || "Profile"}
@@ -104,6 +104,11 @@ export default function AboutProfiles({ profiles }: AboutProfilesProps) {
               <h2 className="text-base font-medium md:mt-1 md:text-base lg:text-lg">
                 ({profile.name})
               </h2>
+            ) : null}
+            {profile.role ? (
+              <p className="text-sm font-light md:text-sm lg:text-base">
+                {profile.role}
+              </p>
             ) : null}
           </article>
         );

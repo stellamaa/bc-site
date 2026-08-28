@@ -55,12 +55,12 @@ export default function ContactSection({
   return (
     <section
       id="contact"
-      className="flex min-h-dvh scroll-mt-14 mt-20 flex-col items-center justify-start md:justify-center px-4 py-16 md:scroll-mt-24 md:px-16 md:py-10 lg:px-24"
+      className="flex min-h-dvh scroll-mt-14 flex-col items-center justify-center pb-25 md:justify-center px-4 py-16 md:scroll-mt-24 md:px-16 md:py-10 lg:px-24"
     >
       {!hasLinks ? (
         <div className="min-h-[40vh]" aria-hidden />
       ) : (
-        <ul className="flex flex-col items-center gap-1 text-center md:gap-5">
+        <ul className="flex flex-col items-center gap-4 text-center md:gap-5">
           {email ? (
             <li>
               <HoverLink href={`mailto:${email}`} label="Email" />

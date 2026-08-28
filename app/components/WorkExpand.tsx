@@ -120,7 +120,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               <button
                 type="button"
                 onClick={handlePlay}
-                className="absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[50cqh] leading-none md:pb-20"
+                className="absolute inset-0 z-10 flex items-center justify-center pb-2 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[50cqh] leading-none md:pb-6"
                 aria-label="Play video"
               >
                 {/* Mobile: (||) only after a real pause; before start use (>).
@@ -134,7 +134,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               <button
                 type="button"
                 onClick={handlePause}
-                className="absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity text-[50cqh] leading-none md:pb-20"
+                className="absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity text-[50cqh] leading-none md:pb-6"
                 aria-label="Pause video"
               >
                 <span className="opacity-0 md:group-hover:opacity-100">
@@ -170,7 +170,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-1 right-2 z-20 text-3xl font-medium tracking-wide text-white drop-shadow transition-opacity hover:opacity-80 md:-top-0 md:right-3 md:text-4xl"
+          className="absolute top-1.2 right-2 z-20 text-[1.62rem] font-medium tracking-wide text-white drop-shadow transition-opacity hover:opacity-80 md:top-0 md:right-3 md:text-4xl"
           aria-label="Close project"
         >
           (X)

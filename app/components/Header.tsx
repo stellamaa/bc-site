@@ -139,6 +139,7 @@ export default function Header({ className = "" }: HeaderProps) {
             <Link
               key={item.label}
               href={item.href}
+              data-nav-section={item.section}
               onClick={(e) => onSectionClick(e, item.section)}
               className={
                 isLogo

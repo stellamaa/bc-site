@@ -32,6 +32,13 @@ const about = defineType({
               validation: (rule) => rule.required(),
             }),
             defineField({
+              name: "role",
+              title: "Job role",
+              type: "string",
+              description:
+                "Shown under the name on the About page (light weight, no brackets).",
+            }),
+            defineField({
               name: "image",
               title: "Image",
               type: "image",
@@ -53,6 +60,7 @@ const about = defineType({
           preview: {
             select: {
               title: "name",
+              subtitle: "role",
               media: "image",
             },
           },
