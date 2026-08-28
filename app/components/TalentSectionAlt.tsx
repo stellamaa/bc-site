@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
-import { documentUrl } from "@/lib/documentUrl";
+import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { sortByNameAsc } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import {
@@ -61,10 +61,7 @@ export default function TalentSectionAlt({
   /** Preview the mobile overlay even on a wide desktop window */
   const forceOverlayUi = searchParams.get("talentOverlay") === "1";
 
-  const [isDesktop, setIsDesktop] = useState<boolean | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.matchMedia("(min-width: 768px)").matches;
-  });
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   // Closed by default — otherwise the fixed overlay blocks the whole homepage
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
@@ -77,7 +74,7 @@ export default function TalentSectionAlt({
   const dismissMenuWithoutSelection = () => {
     closeMenu();
     if (selectedSlug) return;
-    window.history.replaceState(null, "", documentUrl("", "landing"));
+    replaceDocumentUrl("", "landing");
     document
       .getElementById("landing")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -367,9 +364,9 @@ export default function TalentSectionAlt({
                               </span>
                             ) : null}
                           </div>
-                          {work.description ? (
-                            <p className="line-clamp-3 text-[10px] leading-snug">
-                              {work.description}
+                          {work.title ? (
+                            <p className="line-clamp-2 text-[10px] font-medium leading-snug">
+                              {work.title}
                             </p>
                           ) : null}
                         </button>

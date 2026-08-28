@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import WorkExpand from "@/app/components/WorkExpand";
 import WorkSection from "@/app/components/WorkSection";
-import { documentUrl } from "@/lib/documentUrl";
+import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
@@ -21,6 +21,8 @@ type Props = {
 function formatIndex(index: number) {
   return String(index + 1).padStart(2, "0");
 }
+
+const PAGE_SIZE = 4;
 
 function findCreativeDirectorsSlug(categories: Category[]): string | null {
   const match = categories.find((category) => {
@@ -48,10 +50,7 @@ export default function WorkSectionAlt({
   const searchParams = useSearchParams();
   const forceOverlayUi = searchParams.get("workOverlay") === "1";
 
-  const [isDesktop, setIsDesktop] = useState<boolean | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.matchMedia("(min-width: 768px)").matches;
-  });
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
   const creativeSlug = useMemo(
     () => findCreativeDirectorsSlug(categories),
@@ -106,11 +105,7 @@ export default function WorkSectionAlt({
     const params = new URLSearchParams(searchParams.toString());
     if (!params.getAll("category").length) {
       params.append("category", creativeSlug);
-      window.history.replaceState(
-        null,
-        "",
-        documentUrl(params.toString()),
-      );
+      replaceDocumentUrl(params.toString());
     }
   }, [
     categoryKey,
@@ -132,7 +127,7 @@ export default function WorkSectionAlt({
     for (const slug of defaults) params.append("category", slug);
     const query = params.toString();
     // Stay on landing hash when resetting from BC
-    window.history.replaceState(null, "", documentUrl(query));
+    replaceDocumentUrl(query);
   }, [creativeSlug, forceOverlayUi, searchParams]);
 
   useEffect(() => {
@@ -177,7 +172,7 @@ export default function WorkSectionAlt({
       params.delete("category");
       for (const slug of slugs) params.append("category", slug);
       const query = params.toString();
-      window.history.replaceState(null, "", documentUrl(query, "work"));
+      replaceDocumentUrl(query, "work");
     },
     [searchParams],
   );
@@ -215,9 +210,15 @@ export default function WorkSectionAlt({
   }, [works, appliedSlugs]);
 
   const [displayWorks, setDisplayWorks] = useState(filteredWorks);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   useEffect(() => {
     setDisplayWorks(shuffleArray(filteredWorks));
+    setVisibleCount(PAGE_SIZE);
   }, [filteredWorks]);
+
+  const visibleWorks = displayWorks.slice(0, visibleCount);
+  const hasMore = visibleCount < displayWorks.length;
 
   const openWork = useMemo(
     () => displayWorks.find((work) => work._id === openWorkId) ?? null,
@@ -243,7 +244,7 @@ export default function WorkSectionAlt({
   return (
     <section
       id="work"
-      className="min-h-dvh scroll-mt-14 px-4 pt-4 pb-3"
+      className="scroll-mt-14 px-4 pt-4 pb-3 md:min-h-dvh"
     >
       {menuOpen ? (
         <div
@@ -312,59 +313,78 @@ export default function WorkSectionAlt({
       {displayWorks.length === 0 ? (
         <div className="min-h-[40vh]" aria-hidden />
       ) : (
-        <ul className="grid grid-cols-2 gap-x-3 gap-y-6">
-          {displayWorks.map((work, index) => {
-            const n = formatIndex(index);
-            const mediaKind = getWorkMediaKind(work);
-            const isOpen = openWorkId === work._id;
-            const overlayLabel =
-              mediaKind === "video"
-                ? "(PLAY)"
-                : mediaKind === "gallery"
-                  ? "(VIEW MORE)"
-                  : null;
+        <>
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-6">
+            {visibleWorks.map((work, index) => {
+              const n = formatIndex(index);
+              const mediaKind = getWorkMediaKind(work);
+              const isOpen = openWorkId === work._id;
+              const overlayLabel =
+                mediaKind === "video"
+                  ? "(PLAY)"
+                  : mediaKind === "gallery"
+                    ? "(VIEW MORE)"
+                    : null;
 
-            return (
-              <li key={work._id} className="min-w-0">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setOpenWorkId((prev) =>
-                      prev === work._id ? null : work._id,
-                    )
-                  }
-                  aria-expanded={isOpen}
-                  className="flex w-full flex-col gap-2 text-left"
-                >
-                  <span className="text-xs font-medium tabular-nums text-black">
-                    ({n})
-                  </span>
-                  <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
-                    {work.thumbnail ? (
-                      <Image
-                        src={work.thumbnail}
-                        alt={work.thumbnailAlt || work.title || "Work"}
-                        fill
-                        className="object-cover"
-                        sizes="40vw"
-                      />
+              return (
+                <li key={work._id} className="min-w-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenWorkId((prev) =>
+                        prev === work._id ? null : work._id,
+                      )
+                    }
+                    aria-expanded={isOpen}
+                    className="flex w-full flex-col gap-2 text-left"
+                  >
+                    <span className="text-xs font-medium tabular-nums text-black">
+                      ({n})
+                    </span>
+                    <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
+                      {work.thumbnail ? (
+                        <Image
+                          src={work.thumbnail}
+                          alt={work.thumbnailAlt || work.title || "Work"}
+                          fill
+                          className="object-cover"
+                          sizes="40vw"
+                          loading={index < 4 ? "eager" : "lazy"}
+                          priority={index < 4}
+                        />
+                      ) : null}
+                      {overlayLabel ? (
+                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-bold tracking-wide text-white uppercase drop-shadow">
+                          {overlayLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                    {work.title ? (
+                      <p className="line-clamp-2 text-[10px] font-medium leading-snug">
+                        {work.title}
+                      </p>
                     ) : null}
-                    {overlayLabel ? (
-                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-bold tracking-wide text-white uppercase drop-shadow">
-                        {overlayLabel}
-                      </span>
-                    ) : null}
-                  </div>
-                  {work.description ? (
-                    <p className="line-clamp-3 text-[10px] leading-snug">
-                      {work.description}
-                    </p>
-                  ) : null}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          {hasMore ? (
+            <div className="mt-8 flex justify-start pb-1">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleCount((prev) =>
+                    Math.min(prev + PAGE_SIZE, displayWorks.length),
+                  )
+                }
+                className="text-[10px] text-left font-bold tracking-wide uppercase"
+              >
+                (LOAD MORE)
+              </button>
+            </div>
+          ) : null}
+        </>
       )}
     </section>
   );

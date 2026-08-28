@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
-import { documentUrl } from "@/lib/documentUrl";
+import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
 import { getWorkMediaKind } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
@@ -59,7 +59,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
       params.delete("category");
       for (const slug of slugs) params.append("category", slug);
       const query = params.toString();
-      window.history.replaceState(null, "", documentUrl(query, "work"));
+      replaceDocumentUrl(query, "work");
     },
     [searchParams],
   );
@@ -230,8 +230,10 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
             <div
               className={
                 stripLayout
-                  ? "md:max-w-[calc(6*9rem+5*2.5rem)] lg:max-w-[calc(6*9.5rem+5*2.5rem)]"
-                  : undefined
+                  ? "relative md:max-w-[calc(6*9rem+5*2.5rem)] lg:max-w-[calc(6*9.5rem+5*2.5rem)]"
+                  : pageScrollLayout
+                    ? "relative"
+                    : undefined
               }
             >
               <div
@@ -302,6 +304,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                                   fill
                                   className="object-cover"
                                   sizes="160px"
+                                  loading="lazy"
                                 />
                                 {overlayLabel ? (
                                   <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-bold tracking-wide text-white uppercase drop-shadow md:text-xl">
@@ -395,6 +398,8 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                                     fill
                                     className="object-cover"
                                     sizes="160px"
+                                    loading={indexInPage < 3 ? "eager" : "lazy"}
+                                    priority={pageIndex === 0 && indexInPage < 3}
                                   />
                                   {overlayLabel ? (
                                     <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-bold tracking-wide text-white uppercase drop-shadow md:text-xl">
@@ -406,7 +411,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                                 <div className="aspect-square w-full bg-neutral-100" />
                               )}
                               {work.title ? (
-                                <p className="line-clamp-2 text-xs font-normal text-center leading-snug text-black md:text-sm">
+                                <p className="line-clamp-2 text-xs font-normal text-left leading-snug text-black md:text-sm">
                                   {work.title}
                                 </p>
                               ) : null}
@@ -426,7 +431,9 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                     : pageScrollLayout
                 }
                 itemCount={displayWorks.length}
-                width={stripLayout ? "full" : "half"}
+                width="full"
+                placement="below"
+                insetEnds={stripLayout || desktopPageScroll}
               />
             </div>
           )}

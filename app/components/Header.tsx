@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { documentUrl } from "@/lib/documentUrl";
-
-type SectionId = "landing" | "work" | "talent" | "about" | "contact";
+import {
+  SECTION_IDS,
+  type SectionId,
+} from "@/app/components/SectionPager";
+import { replaceDocumentUrl } from "@/lib/documentUrl";
 
 const navItems = [
   { href: "/#about", label: "ABOUT US", section: "about" as const },
@@ -28,6 +30,15 @@ type HeaderProps = {
 export default function Header({ className = "" }: HeaderProps) {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<SectionId | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     if (pathname !== "/") {
@@ -35,37 +46,36 @@ export default function Header({ className = "" }: HeaderProps) {
       return;
     }
 
-    const isMobile = window.matchMedia("(max-width: 767px)").matches;
-    setActiveSection(isMobile ? "work" : "landing");
+    const hash = window.location.hash.replace(/^#/, "");
+    if ((SECTION_IDS as readonly string[]).includes(hash)) {
+      setActiveSection(hash as SectionId);
+    } else {
+      setActiveSection(isDesktop ? "landing" : "work");
+    }
 
-    const sectionIds: SectionId[] = [
-      "landing",
-      "work",
-      "talent",
-      "about",
-      "contact",
-    ];
+    const onSection = (event: Event) => {
+      const section = (event as CustomEvent<{ section?: string }>).detail
+        ?.section;
+      if (section && (SECTION_IDS as readonly string[]).includes(section)) {
+        setActiveSection(section as SectionId);
+      }
+    };
+    window.addEventListener("bc:section", onSection);
+
+    if (isDesktop) {
+      return () => window.removeEventListener("bc:section", onSection);
+    }
 
     const updateActive = () => {
       const marker = window.innerHeight * 0.35;
-      let current: SectionId = isMobile ? "work" : "landing";
+      let current: SectionId = "work";
 
-      for (const id of sectionIds) {
+      for (const id of SECTION_IDS) {
         const el = document.getElementById(id);
         if (!el) continue;
         const top = el.getBoundingClientRect().top;
         if (top <= marker) {
           current = id;
-        }
-      }
-
-      // Contact is nested at the end of About — it often can't reach the
-      // marker. Prefer CONTACT once the block is in the lower viewport.
-      const contactEl = document.getElementById("contact");
-      if (contactEl) {
-        const rect = contactEl.getBoundingClientRect();
-        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
-          current = "contact";
         }
       }
 
@@ -76,25 +86,27 @@ export default function Header({ className = "" }: HeaderProps) {
     window.addEventListener("scroll", updateActive, { passive: true });
     window.addEventListener("resize", updateActive);
     return () => {
+      window.removeEventListener("bc:section", onSection);
       window.removeEventListener("scroll", updateActive);
       window.removeEventListener("resize", updateActive);
     };
-  }, [pathname]);
+  }, [pathname, isDesktop]);
 
   const onSectionClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, section: SectionId) => {
       if (pathname !== "/") {
-        // Let the link navigate to /#section
         return;
       }
       e.preventDefault();
-      // Preserve basePath (e.g. /bc-site/) — `/#section` would jump to host root.
-      window.history.replaceState(null, "", documentUrl("", section));
-      scrollToId(section);
+      replaceDocumentUrl("", section);
       setActiveSection(section);
       window.dispatchEvent(
         new CustomEvent("bc:section", { detail: { section } }),
       );
+      // Desktop pager swaps panels; mobile still scrolls the long page.
+      if (!window.matchMedia("(min-width: 768px)").matches) {
+        scrollToId(section);
+      }
     },
     [pathname],
   );

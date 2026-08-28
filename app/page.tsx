@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import AboutSection from "@/app/components/AboutSection";
+import ContactSection from "@/app/components/ContactSection";
 import IntroLoader from "@/app/components/IntroLoader";
 import LandingHero from "@/app/components/LandingHero";
 import PortableText from "@/app/components/PortableText";
+import SectionPager from "@/app/components/SectionPager";
 import TalentSectionSwitch from "@/app/components/TalentSectionSwitch";
 import WorkSectionSwitch from "@/app/components/WorkSectionSwitch";
-import { collectIntroMedia, collectSiteImageUrls } from "@/lib/introMedia";
+import { collectIntroMedia, collectCriticalImageUrls } from "@/lib/introMedia";
 import {
   getAbout,
   getCategories,
@@ -34,43 +36,56 @@ export default async function Home() {
 
   const description = landing?.description ?? null;
   const introMedia = collectIntroMedia(works);
-  const preloadUrls = collectSiteImageUrls(works, talents, about);
+  const preloadUrls = collectCriticalImageUrls(works);
 
   return (
     <main className="flex flex-col bg-white text-black">
       <IntroLoader media={introMedia} preloadUrls={preloadUrls} />
 
-      <section
-        id="landing"
-        className="scroll-mt-14 md:scroll-mt-24 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-[6.5rem] md:flex-col md:pt-[6.5rem]"
-      >
-        <div className="px-4 pt-4 pb-2 md:hidden">
-          <h1 className="mb-6 text-center text-3xl font-medium tracking-tight uppercase">
-            BLANK C()
-          </h1>
-          {description && description.length > 0 ? (
-            <PortableText
-              value={description}
-              className="mx-auto mb-2 max-w-md text-center text-sm font-normal leading-relaxed text-black"
-            />
-          ) : null}
-        </div>
+      <SectionPager>
+        <section
+          id="landing"
+          className="scroll-mt-14 md:scroll-mt-24 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-[6.5rem] md:flex-col md:pt-[6.5rem]"
+        >
+          <div className="px-4 pt-4 pb-2 md:hidden">
+            <h1 className="mb-6 text-center text-3xl font-medium tracking-tight uppercase">
+              BLANK C()
+            </h1>
+            {description && description.length > 0 ? (
+              <PortableText
+                value={description}
+                className="mx-auto mb-2 max-w-md text-center text-sm font-normal leading-relaxed text-black"
+              />
+            ) : null}
+          </div>
 
-        <LandingHero description={description} categories={landingCategories} />
-      </section>
+          <LandingHero
+            description={description}
+            categories={landingCategories}
+          />
+        </section>
 
-      <Suspense fallback={<div id="work" className="min-h-dvh" />}>
-        <WorkSectionSwitch categories={workCategories} works={works} />
-      </Suspense>
+        <Suspense fallback={<div id="work" className="min-h-dvh" />}>
+          <WorkSectionSwitch categories={workCategories} works={works} />
+        </Suspense>
 
-      <TalentSectionSwitch
-        talents={talents}
-        works={works}
-        // Experiment branch: overlay on by default. Back to original: ?talentLayout=default
-        defaultLayout="overlay"
-      />
+        <TalentSectionSwitch
+          talents={talents}
+          works={works}
+          // Experiment branch: overlay on by default. Back to original: ?talentLayout=default
+          defaultLayout="overlay"
+        />
 
-      <AboutSection about={about} />
+        <AboutSection about={about} />
+
+        <ContactSection
+          phone={about?.phone}
+          address={about?.address}
+          email={about?.email}
+          instagram={about?.instagram}
+          linkedin={about?.linkedin}
+        />
+      </SectionPager>
     </main>
   );
 }

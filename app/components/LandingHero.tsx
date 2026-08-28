@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { PortableTextBlock } from "sanity";
 import PortableText from "@/app/components/PortableText";
-import { documentUrl } from "@/lib/documentUrl";
+import { pushDocumentUrl } from "@/lib/documentUrl";
 import type { Category } from "@/types/category";
 
 type LandingHeroProps = {
@@ -33,19 +33,25 @@ export default function LandingHero({
                   e.preventDefault();
                   // history + pathname keeps basePath; router.push same-path
                   // query updates are unreliable on static export (GitHub Pages).
-                  window.history.pushState(
-                    null,
-                    "",
-                    documentUrl(
-                      `category=${encodeURIComponent(category.slug)}`,
-                      "work",
-                    ),
+                  pushDocumentUrl(
+                    `category=${encodeURIComponent(category.slug)}`,
+                    "work",
                   );
-                  requestAnimationFrame(() => {
-                    document
-                      .getElementById("work")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  });
+                  window.dispatchEvent(
+                    new CustomEvent("bc:section", {
+                      detail: { section: "work" },
+                    }),
+                  );
+                  if (!window.matchMedia("(min-width: 768px)").matches) {
+                    requestAnimationFrame(() => {
+                      document
+                        .getElementById("work")
+                        ?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                    });
+                  }
                 }}
               >
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity">

@@ -88,25 +88,34 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
       if (items.length > 11) {
         const previousScrollTop = list.scrollTop;
         list.scrollTop = 0;
+        const next = items[11];
         setNamesMaxHeight(
-          items[11].getBoundingClientRect().top -
-            items[0].getBoundingClientRect().top,
+          Math.round(
+            next.getBoundingClientRect().top -
+              items[0].getBoundingClientRect().top,
+          ),
         );
         list.scrollTop = previousScrollTop;
         return;
       }
 
       setNamesMaxHeight(
-        items[items.length - 1].getBoundingClientRect().bottom -
-          items[0].getBoundingClientRect().top,
+        Math.round(
+          items[items.length - 1].getBoundingClientRect().bottom -
+            items[0].getBoundingClientRect().top,
+        ),
       );
     };
 
     const id = requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
+    const list = namesListRef.current;
+    const ro = list ? new ResizeObserver(measure) : null;
+    if (list && ro) ro.observe(list);
     return () => {
       cancelAnimationFrame(id);
       window.removeEventListener("resize", measure);
+      ro?.disconnect();
     };
   }, [isDesktop, namedTalents.length]);
 
@@ -200,13 +209,13 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
       id="talent"
       className="min-h-dvh scroll-mt-14 px-3 pt-3 pb-16 md:scroll-mt-24 md:px-8 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
     >
-      <div className="flex items-start gap-4 md:items-stretch md:gap-16 lg:gap-24">
-        <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-56 md:max-w-none">
-          <p className="mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:text-xs">
+      <div className="flex items-start gap-4 md:grid md:grid-cols-[14rem_minmax(0,1fr)] md:items-start md:gap-x-16 md:gap-y-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-x-24">
+        <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:contents md:w-auto md:max-w-none">
+          <p className="mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:col-start-1 md:row-start-1 md:mb-0 md:text-xs">
             Talent
           </p>
           <div
-            className={`flex min-h-0 w-full items-stretch gap-3 ${
+            className={`flex min-h-0 w-full items-stretch gap-3 md:col-start-1 md:row-start-2 ${
               namesScroll ? "shrink-0" : "flex-1"
             }`}
             style={
@@ -255,15 +264,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
           </div>
         </aside>
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col md:ml-15 md:pb-10">
-          {/* Match Talent label so profile aligns with the first name */}
-          <p
-            className="mb-5 hidden w-full text-center text-xs font-medium uppercase tracking-[0.12em] md:block"
-            aria-hidden
-          >
-            &nbsp;
-          </p>
-
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col md:col-start-2 md:row-start-2 md:ml-15">
           {!selected ? (
             <div className="min-h-[40vh] md:min-h-0 md:flex-1" aria-hidden />
           ) : openWork ? (
@@ -375,13 +376,19 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
             <>
               <div ref={expandAnchorRef} className="sr-only" aria-hidden />
               <div
-                className="flex min-h-0 flex-1 flex-col md:justify-between"
+                className="flex min-h-0 flex-col md:justify-between"
                 style={
-                  namesMaxHeight ? { height: namesMaxHeight } : undefined
+                  namesMaxHeight
+                    ? {
+                        height: namesMaxHeight,
+                        minHeight: namesMaxHeight,
+                        maxHeight: namesMaxHeight,
+                      }
+                    : undefined
                 }
               >
                 {/* Profile */}
-                <div className="flex flex-row items-start gap-4 md:gap-8">
+                <div className="flex min-h-0 flex-row items-start gap-4 overflow-hidden md:gap-8">
                   <div className="relative size-[7rem] shrink-0 overflow-hidden bg-neutral-100 pr-3 sm:size-24 md:size-[8.5rem] lg:size-36">
                     {selected.image ? (
                       <Image
@@ -394,7 +401,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                     ) : null}
                   </div>
 
-                  <div className="min-w-0 max-w-lg flex-1 md:ml-10">
+                  <div className="min-w-0 max-w-lg flex-1 overflow-hidden md:ml-10">
                     <h2 className="mb-1.5 text-sm font-medium tracking-tight uppercase md:mb-2 md:text-xl lg:text-2xl">
                       <span className="md:hidden">{selected.name}</span>
                       <span className="hidden md:inline">
@@ -405,7 +412,9 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                       <div className="text-xs leading-[1.2] font-normal text-black md:text-base">
                         <p
                           className={`whitespace-pre-line ${
-                            bioExpanded ? "" : "line-clamp-6"
+                            bioExpanded
+                              ? "max-h-40 overflow-y-auto md:max-h-none"
+                              : "line-clamp-6"
                           }`}
                         >
                           {selected.bio}
@@ -434,7 +443,10 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                 </div>
 
                 {talentWorks.length > 0 ? (
-                  <div ref={worksAnchorRef} className="mt-4 md:mt-0">
+                  <div
+                    ref={worksAnchorRef}
+                    className="mt-4 shrink-0 md:mt-auto"
+                  >
                     <div className="md:max-w-[calc(5*9rem+4*2.5rem)] lg:max-w-[calc(5*9.5rem+4*2.5rem)]">
                       <div
                         ref={scrollRef}

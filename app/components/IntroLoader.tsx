@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { preloadImages } from "@/lib/introMedia";
 import Logo from "@/app/BLANK_CO.svg";
 
@@ -16,17 +16,15 @@ const DESIGN_STATIC = false;
 
 const SESSION_KEY = "bc-intro-seen";
 const SLIDE_MS = 280;
-/** Keep flickering at least this long so the intro reads clearly */
-const MIN_CYCLE_MS = 2200;
-/** Don't block forever if a CDN image hangs */
-const MAX_WAIT_MS = 12000;
+/** Fixed flicker duration — does not wait for full site load */
+const CYCLE_MS = 4000;
 const COLLAPSE_MS = 800;
 const HOLD_MS = 350;
 const FADE_MS = 900;
 
 type IntroLoaderProps = {
   media: IntroMediaItem[];
-  /** Site images to warm while the intro flickers */
+  /** Critical first-screen images to warm in the background during the intro */
   preloadUrls?: string[];
 };
 
@@ -40,7 +38,6 @@ export default function IntroLoader({
   );
   const [phase, setPhase] = useState<IntroPhase | "boot">("boot");
   const [index, setIndex] = useState(0);
-  const startedAt = useRef(0);
 
   useEffect(() => {
     if (!DESIGN_STATIC) {
@@ -60,7 +57,6 @@ export default function IntroLoader({
     }
 
     setPhase("cycle");
-    startedAt.current = performance.now();
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -69,7 +65,7 @@ export default function IntroLoader({
     };
   }, [slides.length]);
 
-  // Flicker through thumbnails for the whole loading wait
+  // Flicker through thumbnails for a fixed window
   useEffect(() => {
     if (DESIGN_STATIC || phase !== "cycle" || slides.length === 0) return;
 
@@ -77,46 +73,27 @@ export default function IntroLoader({
       setIndex((i) => (i + 1) % slides.length);
     }, SLIDE_MS);
 
-    return () => window.clearInterval(slideTimer);
+    const endTimer = window.setTimeout(() => {
+      setPhase("collapse");
+    }, CYCLE_MS);
+
+    return () => {
+      window.clearInterval(slideTimer);
+      window.clearTimeout(endTimer);
+    };
   }, [phase, slides.length]);
 
-  // Prefetch site (+ intro) images; end cycle when ready (after a minimum time)
+  // Warm critical first-screen images in the background (non-blocking)
   useEffect(() => {
-    if (DESIGN_STATIC || phase !== "cycle" || slides.length === 0) return;
+    if (DESIGN_STATIC || phase !== "cycle") return;
 
-    let cancelled = false;
-    let finished = false;
     const urls = [
       ...new Set([
         ...slides.map((s) => s.src),
         ...preloadUrls.filter(Boolean),
       ]),
     ];
-
-    const finish = async () => {
-      if (cancelled || finished) return;
-      finished = true;
-      const elapsed = performance.now() - startedAt.current;
-      const remaining = Math.max(0, MIN_CYCLE_MS - elapsed);
-      if (remaining > 0) {
-        await new Promise((r) => window.setTimeout(r, remaining));
-      }
-      if (!cancelled) setPhase("collapse");
-    };
-
-    const timeout = window.setTimeout(() => {
-      void finish();
-    }, MAX_WAIT_MS);
-
-    void preloadImages(urls).then(() => {
-      window.clearTimeout(timeout);
-      void finish();
-    });
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-    };
+    void preloadImages(urls);
   }, [phase, slides, preloadUrls]);
 
   useEffect(() => {
@@ -159,14 +136,6 @@ export default function IntroLoader({
       }`}
       aria-hidden
     >
-      {/* Hidden preload layer — warms cache for next/image on the page */}
-      <div className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0">
-        {preloadUrls.slice(0, 40).map((src) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={src} src={src} alt="" />
-        ))}
-      </div>
-
       <div className="flex max-w-full flex-col items-center gap-[0.2em] font-medium tracking-tight text-black uppercase text-[clamp(1.15rem,10.2vw,3.6rem)] md:text-[clamp(2.25rem,30vw,10rem)]">
         <Image
           src={Logo}
@@ -200,15 +169,13 @@ export default function IntroLoader({
             }
           >
             {current?.src ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 key={current.src}
                 src={current.src}
                 alt=""
-                fill
-                className="object-cover"
-                sizes="200px"
-                priority
-                unoptimized
+                className="absolute inset-0 h-full w-full object-cover"
+                decoding="async"
               />
             ) : null}
           </div>

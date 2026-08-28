@@ -59,3 +59,47 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Desktop: nav swaps full-viewport panels — no document scroll */
+html.desktop-section-pager,
+html.desktop-section-pager body {
+  overflow: hidden;
+  height: 100%;
+}
+
+@media (min-width: 768px) {
+  .desktop-section-pager-root > #landing,
+  .desktop-section-pager-root #work,
+  .desktop-section-pager-root #talent,
+  .desktop-section-pager-root #about,
+  .desktop-section-pager-root #contact {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+    scroll-margin: 0 !important;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .desktop-section-pager-root > #landing[data-active="true"],
+  .desktop-section-pager-root #work[data-active="true"],
+  .desktop-section-pager-root #talent[data-active="true"],
+  .desktop-section-pager-root #about[data-active="true"],
+  .desktop-section-pager-root #contact[data-active="true"] {
+    visibility: visible;
+    pointer-events: auto;
+    z-index: 1;
+  }
+
+  /* Landing normally pulls under the fixed header; pager content is already below it */
+  .desktop-section-pager-root > #landing {
+    padding-top: 0 !important;
+  }
+}
