@@ -15,11 +15,10 @@ type IntroPhase = "cycle" | "collapse" | "hold" | "fade" | "done";
 const DESIGN_STATIC = false;
 
 const SESSION_KEY = "bc-intro-seen";
-const SLIDE_MS = 280;
-/** Fixed flicker duration — does not wait for full site load */
-const CYCLE_MS = 4000;
+const SLIDE_MS = 180;
+const CYCLE_MS = 2000;
 const COLLAPSE_MS = 800;
-const HOLD_MS = 350;
+const HOLD_MS = 300;
 const FADE_MS = 900;
 
 type IntroLoaderProps = {

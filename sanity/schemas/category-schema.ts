@@ -9,7 +9,7 @@ const category = defineType({
       name: "title",
       title: "Title",
       type: "string",
-      description: "e.g. Directors, Photographers, Films, AI",
+      description: "e.g. Films, Photography, AI, Music Videos, Commercials",
       validation: (rule) => rule.required(),
     }),
     defineField({
