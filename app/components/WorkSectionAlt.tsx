@@ -7,7 +7,7 @@ import WorkExpand from "@/app/components/WorkExpand";
 import WorkSection from "@/app/components/WorkSection";
 import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
-import { getWorkMediaKind } from "@/lib/workMedia";
+import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
 
@@ -317,14 +317,8 @@ export default function WorkSectionAlt({
           <ul className="grid grid-cols-2 gap-x-4 gap-y-6">
             {visibleWorks.map((work, index) => {
               const n = formatIndex(index);
-              const mediaKind = getWorkMediaKind(work);
               const isOpen = openWorkId === work._id;
-              const overlayLabel =
-                mediaKind === "video"
-                  ? "(PLAY)"
-                  : mediaKind === "gallery"
-                    ? "(VIEW MORE)"
-                    : null;
+              const overlayLabel = getWorkOverlayLabel(work);
 
               return (
                 <li key={work._id} className="min-w-0">

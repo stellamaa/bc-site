@@ -7,7 +7,7 @@ import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
 import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { sortByNameAsc } from "@/lib/order";
-import { getWorkMediaKind } from "@/lib/workMedia";
+import { getWorkOverlayLabel } from "@/lib/workMedia";
 import {
   getTalentLayoutFromEnv,
   parseTalentLayoutParam,
@@ -322,14 +322,8 @@ export default function TalentSectionAlt({
                   {page.map((work, indexInPage) => {
                     const index = pageIndex * 4 + indexInPage;
                     const n = formatIndex(index);
-                    const mediaKind = getWorkMediaKind(work);
                     const isOpen = openWorkId === work._id;
-                    const overlayLabel =
-                      mediaKind === "video"
-                        ? "(PLAY)"
-                        : mediaKind === "gallery"
-                          ? "(VIEW MORE)"
-                          : null;
+                    const overlayLabel = getWorkOverlayLabel(work);
 
                     return (
                       <li key={work._id} className="min-w-0">

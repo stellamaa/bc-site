@@ -11,9 +11,19 @@ export type WorkTalentRef = {
 };
 
 export type WorkGalleryImage = {
+  _key?: string;
   url?: string;
   alt?: string;
   caption?: string;
+};
+
+export type WorkGalleryVideo = {
+  _key?: string;
+  videoUrl?: string;
+  videoFileUrl?: string;
+  caption?: string;
+  poster?: string;
+  posterAlt?: string;
 };
 
 export type Work = {
@@ -24,6 +34,7 @@ export type Work = {
   thumbnailAlt?: string;
   description?: string;
   gallery?: WorkGalleryImage[];
+  videoGallery?: WorkGalleryVideo[];
   videoUrl?: string;
   videoFileUrl?: string;
   talent?: WorkTalentRef[];

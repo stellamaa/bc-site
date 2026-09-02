@@ -48,9 +48,18 @@ const workProjection = groq`{
   "thumbnailAlt": thumbnail.alt,
   description,
   "gallery": gallery[]{
+    _key,
     "url": asset->url,
     alt,
     caption
+  },
+  "videoGallery": videoGallery[]{
+    _key,
+    videoUrl,
+    "videoFileUrl": videoFile.asset->url,
+    caption,
+    "poster": poster.asset->url,
+    "posterAlt": poster.alt
   },
   videoUrl,
   "videoFileUrl": videoFile.asset->url,

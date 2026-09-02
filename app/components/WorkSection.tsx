@@ -7,7 +7,7 @@ import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
 import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
-import { getWorkMediaKind } from "@/lib/workMedia";
+import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
 
@@ -250,14 +250,8 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                   <ul className="flex w-max flex-nowrap gap-x-10">
                     {displayWorks.map((work, index) => {
                       const n = formatIndex(index);
-                      const mediaKind = getWorkMediaKind(work);
                       const isOpen = openWorkId === work._id;
-                      const overlayLabel =
-                        mediaKind === "video"
-                          ? "(PLAY)"
-                          : mediaKind === "gallery"
-                            ? "(VIEW MORE)"
-                            : null;
+                      const overlayLabel = getWorkOverlayLabel(work);
 
                       return (
                         <li
@@ -344,14 +338,8 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                       {page.map((work, indexInPage) => {
                         const index = pageIndex * 6 + indexInPage;
                         const n = formatIndex(index);
-                        const mediaKind = getWorkMediaKind(work);
                         const isOpen = openWorkId === work._id;
-                        const overlayLabel =
-                          mediaKind === "video"
-                            ? "(PLAY)"
-                            : mediaKind === "gallery"
-                              ? "(VIEW MORE)"
-                              : null;
+                        const overlayLabel = getWorkOverlayLabel(work);
 
                         return (
                           <li key={work._id} className="group min-w-0">

@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getGalleryImages,
+  getGalleryVideos,
   getWorkMediaKind,
   parseVideoSource,
 } from "@/lib/workMedia";
@@ -16,13 +17,32 @@ type WorkExpandProps = {
 
 export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const mediaKind = getWorkMediaKind(work);
-  const video = parseVideoSource(work.videoUrl, work.videoFileUrl);
-  const gallery = getGalleryImages(work);
+  const imageGallery = getGalleryImages(work);
+  const videoGallery = getGalleryVideos(work);
 
   const [playing, setPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const activeVideoItem =
+    mediaKind === "videoGallery" ? videoGallery[galleryIndex] : null;
+
+  const video = useMemo(() => {
+    if (mediaKind === "video") {
+      return parseVideoSource(work.videoUrl, work.videoFileUrl);
+    }
+    if (mediaKind === "videoGallery" && activeVideoItem) {
+      return parseVideoSource(
+        activeVideoItem.videoUrl,
+        activeVideoItem.videoFileUrl,
+      );
+    }
+    return null;
+  }, [mediaKind, work.videoUrl, work.videoFileUrl, activeVideoItem]);
+
+  const poster =
+    activeVideoItem?.poster || work.thumbnail || undefined;
 
   useEffect(() => {
     setPlaying(false);
@@ -35,6 +55,15 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   }, [work._id]);
 
   useEffect(() => {
+    setPlaying(false);
+    setIsPaused(true);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, [galleryIndex]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -42,21 +71,24 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const poster = work.thumbnail;
-  const currentImage = gallery[galleryIndex];
+  const currentImage = imageGallery[galleryIndex];
+  const galleryLength =
+    mediaKind === "gallery"
+      ? imageGallery.length
+      : mediaKind === "videoGallery"
+        ? videoGallery.length
+        : 0;
   const canPrev = galleryIndex > 0;
-  const canNext = galleryIndex < gallery.length - 1;
+  const canNext = galleryIndex < galleryLength - 1;
+  const isVideoPlayer = mediaKind === "video" || mediaKind === "videoGallery";
 
   const showPlayOverlay =
-    mediaKind === "video" &&
+    isVideoPlayer &&
     video &&
     (!playing || (video.kind === "file" && isPaused));
 
   const showPauseHitTarget =
-    mediaKind === "video" &&
-    video?.kind === "file" &&
-    playing &&
-    !isPaused;
+    isVideoPlayer && video?.kind === "file" && playing && !isPaused;
 
   const handlePlay = async () => {
     setPlaying(true);
@@ -73,10 +105,14 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
     videoRef.current?.pause();
   };
 
+  const showGalleryNav =
+    (mediaKind === "gallery" && imageGallery.length > 1) ||
+    (mediaKind === "videoGallery" && videoGallery.length > 1);
+
   return (
     <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-1 md:ml-12">
       <div className="group relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
-        {mediaKind === "video" && video ? (
+        {isVideoPlayer && video ? (
           <>
             {video.kind === "youtube" && playing ? (
               <iframe
@@ -90,6 +126,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
 
             {video.kind === "file" ? (
               <video
+                key={video.src}
                 ref={videoRef}
                 src={video.src}
                 poster={poster}
@@ -108,7 +145,12 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
             {!playing && video.kind === "youtube" && poster ? (
               <Image
                 src={poster}
-                alt={work.thumbnailAlt || work.title || "Project"}
+                alt={
+                  activeVideoItem?.posterAlt ||
+                  work.thumbnailAlt ||
+                  work.title ||
+                  "Project"
+                }
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 70vw"
@@ -123,13 +165,10 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
                 className="absolute inset-0 z-10 flex items-center justify-center pb-2 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[50cqh] leading-none md:pb-6"
                 aria-label="Play video"
               >
-                {/* Mobile: (||) only after a real pause; before start use (>).
-                    Desktop: (||) when paused mid-play; (>) before first play. */}
                 <span>{playing && isPaused ? "(||)" : "(>)"}</span>
               </button>
             ) : null}
 
-            {/* Playing: mobile invisible hit target; desktop shows (||) on hover */}
             {showPauseHitTarget ? (
               <button
                 type="button"
@@ -177,14 +216,16 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
         </button>
       </div>
 
-      {mediaKind === "gallery" && gallery.length > 1 ? (
+      {showGalleryNav ? (
         <div className="mt-3 flex items-center justify-center gap-6 text-sm font-medium tracking-wide md:justify-start md:text-base">
           <button
             type="button"
             disabled={!canPrev}
             onClick={() => setGalleryIndex((i) => Math.max(0, i - 1))}
             className={`group transition-opacity ${canPrev ? "hover:opacity-60" : "opacity-30"}`}
-            aria-label="Previous image"
+            aria-label={
+              mediaKind === "videoGallery" ? "Previous video" : "Previous image"
+            }
           >
             <span className="invisible group-hover:visible group-focus-visible:visible group-active:visible">
               (
@@ -195,16 +236,18 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
             </span>
           </button>
           <span className="tabular-nums text-neutral-400">
-            {galleryIndex + 1}/{gallery.length}
+            {galleryIndex + 1}/{galleryLength}
           </span>
           <button
             type="button"
             disabled={!canNext}
             onClick={() =>
-              setGalleryIndex((i) => Math.min(gallery.length - 1, i + 1))
+              setGalleryIndex((i) => Math.min(galleryLength - 1, i + 1))
             }
             className={`group transition-opacity ${canNext ? "hover:opacity-60" : "opacity-30"}`}
-            aria-label="Next image"
+            aria-label={
+              mediaKind === "videoGallery" ? "Next video" : "Next image"
+            }
           >
             <span className="invisible group-hover:visible group-focus-visible:visible group-active:visible">
               (
@@ -215,6 +258,12 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
             </span>
           </button>
         </div>
+      ) : null}
+
+      {activeVideoItem?.caption ? (
+        <p className="mt-2 text-xs font-normal text-neutral-500 md:text-sm">
+          {activeVideoItem.caption}
+        </p>
       ) : null}
 
       {work.description ? (

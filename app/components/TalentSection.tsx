@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
 import { sortByNameAsc } from "@/lib/order";
-import { getWorkMediaKind } from "@/lib/workMedia";
+import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Talent } from "@/types/talent";
 import type { Work } from "@/types/work";
 
@@ -283,14 +283,8 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                       <ul className="flex w-max flex-nowrap gap-x-10">
                         {talentWorks.map((work, index) => {
                           const n = formatIndex(index);
-                          const mediaKind = getWorkMediaKind(work);
                           const isOpen = openWorkId === work._id;
-                          const overlayLabel =
-                            mediaKind === "video"
-                              ? "(PLAY)"
-                              : mediaKind === "gallery"
-                                ? "(VIEW MORE)"
-                                : null;
+                          const overlayLabel = getWorkOverlayLabel(work);
 
                           return (
                             <li
@@ -460,14 +454,8 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                           <ul className="flex w-max flex-nowrap gap-x-10">
                             {talentWorks.map((work, index) => {
                               const n = formatIndex(index);
-                              const mediaKind = getWorkMediaKind(work);
                               const isOpen = openWorkId === work._id;
-                              const overlayLabel =
-                                mediaKind === "video"
-                                  ? "(PLAY)"
-                                  : mediaKind === "gallery"
-                                    ? "(VIEW MORE)"
-                                    : null;
+                              const overlayLabel = getWorkOverlayLabel(work);
 
                               return (
                                 <li
@@ -549,13 +537,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                                   pageIndex * pageSize + indexInPage;
                                 const n = formatIndex(index);
                                 const isOpen = openWorkId === work._id;
-                                const mediaKind = getWorkMediaKind(work);
-                                const overlayLabel =
-                                  mediaKind === "video"
-                                    ? "(PLAY)"
-                                    : mediaKind === "gallery"
-                                      ? "(VIEW MORE)"
-                                      : null;
+                                const overlayLabel = getWorkOverlayLabel(work);
 
                                 return (
                                   <li key={work._id} className="group min-w-0">

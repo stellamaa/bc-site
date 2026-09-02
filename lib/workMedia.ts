@@ -1,6 +1,6 @@
-import type { Work, WorkGalleryImage } from "@/types/work";
+import type { Work, WorkGalleryImage, WorkGalleryVideo } from "@/types/work";
 
-export type WorkMediaKind = "video" | "gallery" | "none";
+export type WorkMediaKind = "video" | "gallery" | "videoGallery" | "none";
 
 export type ParsedVideo =
   | { kind: "youtube"; embedUrl: string; watchUrl: string }
@@ -77,13 +77,27 @@ export function parseVideoSource(
   return { kind: "file", src: videoUrl };
 }
 
+export function getGalleryVideos(work: Work): WorkGalleryVideo[] {
+  return (work.videoGallery ?? []).filter(
+    (item) => Boolean(item.videoUrl || item.videoFileUrl),
+  );
+}
+
 export function getWorkMediaKind(work: Work): WorkMediaKind {
   if (work.videoUrl || work.videoFileUrl) return "video";
-  const gallery = (work.gallery ?? []).filter((img): img is WorkGalleryImage & { url: string } =>
-    Boolean(img.url),
+  if (getGalleryVideos(work).length > 0) return "videoGallery";
+  const gallery = (work.gallery ?? []).filter(
+    (img): img is WorkGalleryImage & { url: string } => Boolean(img.url),
   );
   if (gallery.length > 0) return "gallery";
   return "none";
+}
+
+export function getWorkOverlayLabel(work: Work): string | null {
+  const kind = getWorkMediaKind(work);
+  if (kind === "video") return "(PLAY)";
+  if (kind === "gallery" || kind === "videoGallery") return "(VIEW MORE)";
+  return null;
 }
 
 export function getGalleryImages(work: Work): WorkGalleryImage[] {
