@@ -161,7 +161,8 @@ const work = defineType({
       name: "categories",
       title: "Categories",
       type: "array",
-      description: "Used by the Work page filters (multi-select).",
+      description:
+        "Used by the Work page filters (multi-select). Includes Films, Photography, AI, Music Videos, Commercials, etc.",
       of: [
         defineArrayMember({
           type: "reference",

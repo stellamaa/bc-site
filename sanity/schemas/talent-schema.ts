@@ -39,7 +39,8 @@ const talent = defineType({
       name: "categories",
       title: "Roles / categories",
       type: "array",
-      description: "Used by the Talent page filter menu.",
+      description:
+        "Used by the Talent page filter menu (e.g. Directors, Photographers, Commercials).",
       of: [
         defineArrayMember({
           type: "reference",
