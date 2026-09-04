@@ -7,6 +7,10 @@ import WorkExpand from "@/app/components/WorkExpand";
 import WorkSection from "@/app/components/WorkSection";
 import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
+import {
+  getCategorySlugsFromLocation,
+  getWorkCreditLine,
+} from "@/lib/workCredits";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
@@ -113,6 +117,29 @@ export default function WorkSectionAlt({
     searchParams,
     useOverlayUi,
   ]);
+
+  // Keep filters in sync when landing / history updates the query via pushState.
+  useEffect(() => {
+    if (!useOverlayUi) return;
+    const syncFromLocation = () => {
+      const next = getCategorySlugsFromLocation();
+      if (next.length > 0) {
+        setAppliedSlugs(next);
+        setDraftSlugs(next);
+        return;
+      }
+      if (creativeSlug) {
+        setAppliedSlugs([creativeSlug]);
+        setDraftSlugs([creativeSlug]);
+      }
+    };
+    window.addEventListener("bc:location", syncFromLocation);
+    window.addEventListener("popstate", syncFromLocation);
+    return () => {
+      window.removeEventListener("bc:location", syncFromLocation);
+      window.removeEventListener("popstate", syncFromLocation);
+    };
+  }, [creativeSlug, useOverlayUi]);
 
   const resetWorks = useCallback(() => {
     // Mobile: restore Creative Directors. Desktop: clear to inactive/empty.
@@ -319,6 +346,7 @@ export default function WorkSectionAlt({
               const n = formatIndex(index);
               const isOpen = openWorkId === work._id;
               const overlayLabel = getWorkOverlayLabel(work);
+              const creditLine = getWorkCreditLine(work);
 
               return (
                 <li key={work._id} className="min-w-0">
@@ -357,6 +385,11 @@ export default function WorkSectionAlt({
                     {work.title ? (
                       <p className="line-clamp-2 text-[10px] font-medium leading-snug">
                         {work.title}
+                      </p>
+                    ) : null}
+                    {creditLine ? (
+                      <p className="-mt-1.5 line-clamp-2 pt-0 text-[10px] font-normal leading-snug text-neutral-500">
+                        {creditLine}
                       </p>
                     ) : null}
                   </button>

@@ -7,6 +7,10 @@ import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
 import { replaceDocumentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
+import {
+  getCategorySlugsFromLocation,
+  getWorkCreditLine,
+} from "@/lib/workCredits";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
@@ -44,6 +48,20 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
   useEffect(() => {
     setSelectedSlugs(categoryKey ? categoryKey.split(",") : []);
   }, [categoryKey]);
+
+  // Landing hero (and filter toggles) use history push/replaceState — sync
+  // selected filters from the live URL when Next searchParams stay stale.
+  useEffect(() => {
+    const syncFromLocation = () => {
+      setSelectedSlugs(getCategorySlugsFromLocation());
+    };
+    window.addEventListener("bc:location", syncFromLocation);
+    window.addEventListener("popstate", syncFromLocation);
+    return () => {
+      window.removeEventListener("bc:location", syncFromLocation);
+      window.removeEventListener("popstate", syncFromLocation);
+    };
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -252,6 +270,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                       const n = formatIndex(index);
                       const isOpen = openWorkId === work._id;
                       const overlayLabel = getWorkOverlayLabel(work);
+                      const creditLine = getWorkCreditLine(work);
 
                       return (
                         <li
@@ -318,6 +337,11 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                                 {work.description}
                               </p>
                             ) : null}
+                            {creditLine ? (
+                              <p className="-mt-1.5 line-clamp-2 pt-0 text-[10px] font-normal leading-snug text-neutral-500">
+                                {creditLine}
+                              </p>
+                            ) : null}
                           </button>
                         </li>
                       );
@@ -340,6 +364,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                         const n = formatIndex(index);
                         const isOpen = openWorkId === work._id;
                         const overlayLabel = getWorkOverlayLabel(work);
+                        const creditLine = getWorkCreditLine(work);
 
                         return (
                           <li key={work._id} className="group min-w-0">
@@ -401,6 +426,11 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                               {work.title ? (
                                 <p className="line-clamp-2 text-xs font-normal text-left leading-snug text-black md:text-sm">
                                   {work.title}
+                                </p>
+                              ) : null}
+                              {creditLine ? (
+                                <p className="-mt-1.5 line-clamp-2 pt-0 text-[10px] font-normal leading-snug text-neutral-500 md:text-xs">
+                                  {creditLine}
                                 </p>
                               ) : null}
                             </button>

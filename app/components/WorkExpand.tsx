@@ -8,6 +8,7 @@ import {
   getWorkMediaKind,
   parseVideoSource,
 } from "@/lib/workMedia";
+import { getWorkCreditLine } from "@/lib/workCredits";
 import type { Work } from "@/types/work";
 
 type WorkExpandProps = {
@@ -108,6 +109,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const showGalleryNav =
     (mediaKind === "gallery" && imageGallery.length > 1) ||
     (mediaKind === "videoGallery" && videoGallery.length > 1);
+  const creditLine = getWorkCreditLine(work);
 
   return (
     <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-1 md:ml-12">
@@ -263,6 +265,18 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
       {activeVideoItem?.caption ? (
         <p className="mt-2 text-xs font-normal text-neutral-500 md:text-sm">
           {activeVideoItem.caption}
+        </p>
+      ) : null}
+
+      {work.title ? (
+        <p className="mt-3 text-sm font-medium uppercase tracking-wide md:mt-2 md:text-base">
+          {work.title}
+        </p>
+      ) : null}
+
+      {creditLine ? (
+        <p className="mt-1 text-xs font-normal text-neutral-500 md:text-sm">
+          {creditLine}
         </p>
       ) : null}
 

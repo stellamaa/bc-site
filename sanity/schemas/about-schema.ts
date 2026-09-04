@@ -73,7 +73,7 @@ const about = defineType({
       title: "Staff",
       type: "array",
       description:
-        "Add one or more staff members. Shown on the right of the About page as simple text (name, title, email, phone). When empty, the featured image is shown instead.",
+        "Add one or more staff members. Shown on the left with profiles when Featured Image / GIF is set; otherwise on the right.",
       of: [
         defineArrayMember({
           type: "object",
@@ -116,11 +116,25 @@ const about = defineType({
       ],
     }),
     defineField({
+      name: "featuredGif",
+      title: "Featured GIF",
+      type: "image",
+      description:
+        "Optional animated GIF on the right of the About page. When set, replaces the Featured Image.",
+      options: {
+        accept: "image/gif",
+        hotspot: true,
+      },
+      fields: [
+        defineField({ name: "alt", title: "Alt", type: "string" }),
+      ],
+    }),
+    defineField({
       name: "featuredImage",
       title: "Featured Image",
       type: "image",
       description:
-        "Large image on the right of the About page. Only used when Staff is empty.",
+        "Large image on the right of the About page. Used when Featured GIF is empty. Staff still shows on the left when this (or the GIF) is set.",
       options: { hotspot: true },
       fields: [
         defineField({ name: "alt", title: "Alt", type: "string" }),

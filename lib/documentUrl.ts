@@ -19,6 +19,11 @@ export function documentUrl(search: string, hash = ""): string {
  * Same-document history update that tolerates Next App Router not being ready
  * yet (`Router action dispatched before initialization`).
  */
+function notifyLocationChange() {
+  // history.push/replaceState does not update Next useSearchParams on static export.
+  window.dispatchEvent(new Event("bc:location"));
+}
+
 function safeHistoryWrite(
   method: "pushState" | "replaceState",
   search: string,
@@ -28,6 +33,7 @@ function safeHistoryWrite(
   const write = () => {
     try {
       window.history[method](window.history.state, "", url);
+      notifyLocationChange();
     } catch {
       // App Router history patch can throw before initialization / during HMR.
     }

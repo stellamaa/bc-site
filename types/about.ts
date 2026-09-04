@@ -20,6 +20,8 @@ export type About = {
   description?: string;
   profiles?: AboutProfile[];
   staff?: AboutStaff[];
+  featuredGif?: string;
+  featuredGifAlt?: string;
   featuredImage?: string;
   featuredImageAlt?: string;
   phone?: string;

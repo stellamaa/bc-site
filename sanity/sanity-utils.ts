@@ -108,6 +108,8 @@ const aboutProjection = groq`{
     email,
     phone
   },
+  "featuredGif": featuredGif.asset->url,
+  "featuredGifAlt": featuredGif.alt,
   "featuredImage": featuredImage.asset->url,
   "featuredImageAlt": featuredImage.alt,
   phone,
