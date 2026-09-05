@@ -45,7 +45,7 @@ export default async function Home() {
       <SectionPager>
         <section
           id="landing"
-          className="scroll-mt-14 md:scroll-mt-24 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-[6.5rem] md:flex-col md:pt-[6.5rem]"
+          className="scroll-mt-12 md:scroll-mt-20 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-20 md:flex-col md:pt-20"
         >
           <div className="px-4 pt-4 pb-2 md:hidden">
             <h1 className="mb-6 text-center text-3xl font-medium tracking-tight uppercase">

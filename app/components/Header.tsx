@@ -123,7 +123,7 @@ export default function Header({ className = "" }: HeaderProps) {
 
   return (
     <header
-      className={`w-full px-4 py-4 md:px-16 md:py-6 lg:px-24 bg-white ${className}`}
+      className={`w-full px-4 py-2.5 md:px-16 md:py-3 lg:px-24 bg-white ${className}`}
     >
       <nav className="flex items-center justify-between gap-2 md:gap-4 text-[11px] sm:text-xs md:text-2xl tracking-[0.08em] uppercase font-bold text-black">
         {navItems.map((item) => {

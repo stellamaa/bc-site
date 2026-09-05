@@ -9,7 +9,7 @@ type AboutSectionProps = {
 
 export default function AboutSection({ about }: AboutSectionProps) {
   if (!about) {
-    return <section id="about" className="min-h-dvh scroll-mt-14 md:scroll-mt-24" />;
+    return <section id="about" className="min-h-dvh scroll-mt-12 md:scroll-mt-20" />;
   }
 
   const {
@@ -63,13 +63,19 @@ export default function AboutSection({ about }: AboutSectionProps) {
   return (
     <section
       id="about"
-      className="scroll-mt-14 px-4 pt-4 pb-6 md:box-border md:flex md:h-[calc(100dvh-6.5rem)] md:max-h-[calc(100dvh-6.5rem)] md:scroll-mt-24 md:flex-col md:px-16 md:py-2 lg:px-24 lg:py-3"
+      className={`scroll-mt-12 px-4 pt-4 pb-6 md:relative md:box-border md:flex md:h-[calc(100dvh-5rem)] md:max-h-[calc(100dvh-5rem)] md:scroll-mt-20 md:flex-col md:overflow-hidden md:px-0 md:py-0 ${
+        hasFeatured ? "" : "md:px-16 lg:px-24"
+      }`}
     >
       <p className="mb-4 text-center text-[10px] font-bold tracking-wide uppercase md:hidden">
         (About us)
       </p>
 
-      <div className="flex min-h-0 flex-1 flex-col md:overflow-hidden">
+      <div
+        className={`flex min-h-0 flex-1 flex-col md:h-full ${
+          hasFeatured ? "md:w-1/2 md:overflow-y-auto md:px-16 md:py-3 lg:px-24 lg:py-4" : "md:overflow-hidden"
+        }`}
+      >
         <MobileContactAlign className="w-full md:contents">
           {description ? (
             <p className="mb-6 shrink-0 text-sm font-normal leading-tight whitespace-pre-line md:mb-13 md:max-w-lg md:text-sm lg:mb-10 lg:text-[0.95rem]">
@@ -77,34 +83,37 @@ export default function AboutSection({ about }: AboutSectionProps) {
             </p>
           ) : null}
 
-          <div className="grid min-h-0 flex-1 grid-cols-1 items-start gap-6 md:grid-cols-2 md:items-stretch md:gap-8 lg:gap-12">
+          <div
+            className={`grid min-h-0 flex-1 grid-cols-1 items-start gap-6 ${
+              hasFeatured
+                ? "md:grid-cols-1 md:gap-3"
+                : "md:grid-cols-2 md:items-stretch md:gap-8 lg:gap-12"
+            }`}
+          >
             <div className="flex min-h-0 flex-col gap-6 md:gap-3 md:overflow-y-auto lg:gap-4">
               <AboutProfiles profiles={profiles} />
-              {/* Staff sits with profiles when the main image/GIF owns the right column */}
               {hasFeatured ? staffBlock : null}
             </div>
 
-            {hasFeatured ? (
-              <div className="relative hidden min-h-0 w-full md:flex md:items-center md:justify-center">
-                <div className="relative aspect-[3/4] w-full max-h-full max-w-md overflow-hidden bg-neutral-100 lg:max-w-lg">
-                  <Image
-                    src={mediaUrl!}
-                    alt={mediaAlt}
-                    fill
-                    className="object-cover"
-                    sizes="40vw"
-                    loading="lazy"
-                    // Preserve GIF animation (optimizer would flatten frames).
-                    unoptimized={isGif}
-                  />
-                </div>
-              </div>
-            ) : (
-              staffBlock
-            )}
+            {!hasFeatured ? staffBlock : null}
           </div>
         </MobileContactAlign>
       </div>
+
+      {hasFeatured ? (
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 md:block">
+          <Image
+            src={mediaUrl!}
+            alt={mediaAlt}
+            fill
+            className="object-cover"
+            sizes="50vw"
+            loading="lazy"
+            // Preserve GIF animation (optimizer would flatten frames).
+            unoptimized={isGif}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

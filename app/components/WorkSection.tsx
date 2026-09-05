@@ -186,7 +186,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
   return (
     <section
       id="work"
-      className="min-h-dvh scroll-mt-14 px-4 pt-4 pb-16 md:scroll-mt-24 md:pt-18 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
+      className="min-h-dvh scroll-mt-12 px-4 pt-4 pb-16 md:scroll-mt-20 md:pt-18 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
     >
       {/*
         Mobile: expand spans full width above filters + grid.
@@ -196,7 +196,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
         {openWork ? (
           <div
             ref={expandAnchorRef}
-            className="col-span-2 row-start-1 scroll-mt-14 md:col-span-1 md:col-start-2 md:-mt-10 md:scroll-mt-24 lg:-mt-14"
+            className="col-span-2 row-start-1 scroll-mt-12 md:col-span-1 md:col-start-2 md:-mt-10 md:scroll-mt-20 lg:-mt-14"
           >
             <WorkExpand work={openWork} onClose={closeWork} />
           </div>
@@ -207,7 +207,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
         <aside
           className={`col-start-1 flex w-auto max-w-[9rem] shrink-0 flex-col items-center md:w-56 md:max-w-none ${
             openWork
-              ? "row-start-2 md:row-start-1 md:row-span-2"
+              ? "row-start-2 md:row-start-1 md:row-span-2 md:-mt-10 lg:-mt-14"
               : "row-start-1"
           }`}
         >

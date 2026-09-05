@@ -55,7 +55,7 @@ export default function ContactSection({
   return (
     <section
       id="contact"
-      className="flex min-h-dvh scroll-mt-14 flex-col items-center justify-start mt-20 md:justify-center px-4 py-16 md:scroll-mt-24 md:px-16 md:py-10 lg:px-24"
+      className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start mt-20 md:justify-center px-4 py-16 md:scroll-mt-20 md:px-16 md:py-10 lg:px-24"
     >
       {!hasLinks ? (
         <div className="min-h-[40vh]" aria-hidden />

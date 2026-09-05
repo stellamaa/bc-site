@@ -102,7 +102,7 @@ export default function SectionPager({ children }: SectionPagerProps) {
     <div
       className={
         isDesktop
-          ? "desktop-section-pager-root relative h-[calc(100dvh-6.5rem)] overflow-hidden"
+          ? "desktop-section-pager-root relative h-[calc(100dvh-5rem)] overflow-hidden"
           : undefined
       }
     >

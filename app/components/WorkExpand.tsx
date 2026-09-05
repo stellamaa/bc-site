@@ -110,9 +110,16 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
     (mediaKind === "gallery" && imageGallery.length > 1) ||
     (mediaKind === "videoGallery" && videoGallery.length > 1);
   const creditLine = getWorkCreditLine(work);
+  const title = work.title?.trim() || "";
+  const rawDescription = work.description?.trim() || "";
+  const description =
+    rawDescription &&
+    rawDescription.toLowerCase() !== title.toLowerCase()
+      ? rawDescription
+      : "";
 
   return (
-    <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-1 md:ml-12">
+    <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-0 md:ml-12">
       <div className="group relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
         {isVideoPlayer && video ? (
           <>
@@ -219,7 +226,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
       </div>
 
       {showGalleryNav ? (
-        <div className="mt-3 flex items-center justify-center gap-6 text-sm font-medium tracking-wide md:justify-start md:text-base">
+        <div className="mt-3 flex items-center justify-center gap-6 text-sm font-medium tracking-wide md:mt-1 md:justify-start md:text-base">
           <button
             type="button"
             disabled={!canPrev}
@@ -263,27 +270,29 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
       ) : null}
 
       {activeVideoItem?.caption ? (
-        <p className="mt-2 text-xs font-normal text-neutral-500 md:text-sm">
+        <p className="mt-2 text-xs font-normal text-neutral-500 md:mt-0.5 md:text-sm">
           {activeVideoItem.caption}
         </p>
       ) : null}
 
-      {work.title ? (
-        <p className="mt-3 text-sm font-medium uppercase tracking-wide md:mt-2 md:text-base">
-          {work.title}
-        </p>
-      ) : null}
-
-      {creditLine ? (
-        <p className="mt-1 text-xs font-normal text-neutral-500 md:text-sm">
-          {creditLine}
-        </p>
-      ) : null}
-
-      {work.description ? (
-        <p className="mt-3 max-w-2xl text-sm font-normal leading-snug whitespace-pre-line md:mt-2 md:w-[48%] md:max-w-[46rem] md:text-left md:leading-tight md:line-clamp-4 md:text-sm lg:w-[82%] lg:max-w-[62rem]">
-          {work.description}
-        </p>
+      {title || creditLine || description ? (
+        <div className="mt-3 flex flex-col gap-0.5 md:mt-0.5 md:gap-0">
+          {title ? (
+            <p className="text-sm font-medium uppercase leading-tight tracking-wide md:text-base md:leading-none">
+              {title}
+            </p>
+          ) : null}
+          {creditLine ? (
+            <p className="text-xs font-normal leading-tight text-neutral-500 md:text-sm md:leading-none">
+              {creditLine}
+            </p>
+          ) : null}
+          {description ? (
+            <p className="max-w-2xl text-sm font-normal leading-snug whitespace-pre-line md:mt-0.5 md:w-[48%] md:max-w-[46rem] md:text-left md:leading-tight md:line-clamp-4 md:text-sm lg:w-[82%] lg:max-w-[62rem]">
+              {description}
+            </p>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

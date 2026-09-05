@@ -199,14 +199,14 @@ export default function TalentSectionAlt({
       id="talent"
       className={
         selected
-          ? "relative min-h-dvh scroll-mt-14 px-4 pt-4 pb-2"
-          : "relative scroll-mt-14"
+          ? "relative min-h-dvh scroll-mt-12 px-4 pt-4 pb-2"
+          : "relative scroll-mt-12"
       }
     >
       {/* Name picker overlay — only while open; does not mount on initial page load */}
       {menuOpen ? (
         <div
-          className="fixed inset-0 z-[60] flex flex-col bg-white pt-14 pb-10"
+          className="fixed inset-0 z-[60] flex flex-col bg-white pt-12 pb-10"
           role="dialog"
           aria-modal="true"
           aria-label="Talent"

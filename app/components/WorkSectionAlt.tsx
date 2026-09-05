@@ -271,11 +271,11 @@ export default function WorkSectionAlt({
   return (
     <section
       id="work"
-      className="scroll-mt-14 px-4 pt-4 pb-3 md:min-h-dvh"
+      className="scroll-mt-12 px-4 pt-4 pb-3 md:min-h-dvh"
     >
       {menuOpen ? (
         <div
-          className="fixed inset-0 z-[60] flex flex-col bg-white pt-14 pb-8"
+          className="fixed inset-0 z-[60] flex flex-col bg-white pt-12 pb-8"
           role="dialog"
           aria-modal="true"
           aria-label="Categories"

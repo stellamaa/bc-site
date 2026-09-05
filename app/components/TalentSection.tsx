@@ -207,17 +207,21 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
   return (
     <section
       id="talent"
-      className="min-h-dvh scroll-mt-14 px-3 pt-3 pb-16 md:scroll-mt-24 md:px-8 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
+      className="min-h-dvh scroll-mt-12 px-3 pt-3 pb-16 md:scroll-mt-20 md:px-8 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
     >
       <div className="flex items-start gap-4 md:grid md:grid-cols-[14rem_minmax(0,1fr)] md:items-start md:gap-x-16 md:gap-y-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-x-24">
         <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:contents md:w-auto md:max-w-none">
-          <p className="mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:col-start-1 md:row-start-1 md:mb-0 md:text-xs">
+          <p
+            className={`mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:col-start-1 md:row-start-1 md:mb-0 md:text-xs ${
+              openWork ? "md:hidden" : ""
+            }`}
+          >
             Talent
           </p>
           <div
-            className={`flex min-h-0 w-full items-stretch gap-4 md:col-start-1 md:row-start-2 md:gap-5 ${
-              namesScroll ? "shrink-0" : "flex-1"
-            }`}
+            className={`flex min-h-0 w-full items-stretch gap-4 md:col-start-1 md:gap-5 ${
+              openWork ? "md:row-start-1" : "md:row-start-2"
+            } ${namesScroll ? "shrink-0" : "flex-1"}`}
             style={
               namesMaxHeight && namesScroll
                 ? { height: namesMaxHeight, maxHeight: namesMaxHeight }
@@ -264,13 +268,17 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
           </div>
         </aside>
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col md:col-start-2 md:row-start-2 md:ml-15">
+        <div
+          className={`flex min-h-0 min-w-0 flex-1 flex-col md:col-start-2 md:ml-15 ${
+            openWork ? "md:row-start-1" : "md:row-start-2"
+          }`}
+        >
           {!selected ? (
             <div className="min-h-[40vh] md:min-h-0 md:flex-1" aria-hidden />
           ) : openWork ? (
             <div
               ref={expandAnchorRef}
-              className="scroll-mt-14 md:-mt-6 md:scroll-mt-24 lg:-mt-10"
+              className="scroll-mt-12 md:scroll-mt-20"
             >
               <WorkExpand work={openWork} onClose={closeWork} />
               {talentWorks.length > 0 ? (
