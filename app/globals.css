@@ -38,14 +38,16 @@ body {
 /* Hide native scrollbar — custom ScrollTrack is used instead */
 .work-works-scroll,
 .talent-works-scroll,
-.talent-names-scroll {
+.talent-names-scroll,
+.talent-bio-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 .work-works-scroll::-webkit-scrollbar,
 .talent-works-scroll::-webkit-scrollbar,
-.talent-names-scroll::-webkit-scrollbar {
+.talent-names-scroll::-webkit-scrollbar,
+.talent-bio-scroll::-webkit-scrollbar {
   display: none;
 }
 

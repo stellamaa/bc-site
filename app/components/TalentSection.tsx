@@ -403,11 +403,11 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                       </span>
                     </h2>
                     {selected.bio ? (
-                      <div className="text-xs leading-[1.2] font-normal text-black md:text-base">
+                      <div className="flex flex-col items-start text-xs leading-[1.2] font-normal text-black md:text-base">
                         <p
-                          className={`whitespace-pre-line ${
+                          className={`w-full whitespace-pre-line ${
                             bioExpanded
-                              ? "max-h-40 overflow-y-auto md:max-h-none"
+                              ? "talent-bio-scroll max-h-40 overflow-y-auto overscroll-contain md:max-h-52"
                               : "line-clamp-6"
                           }`}
                         >

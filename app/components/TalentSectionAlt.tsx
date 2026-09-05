@@ -280,10 +280,12 @@ export default function TalentSectionAlt({
                 ({selected.name})
               </h2>
               {selected.bio ? (
-                <div className="max-w-md text-xs leading-[1.2] font-normal text-black">
+                <div className="flex max-w-md flex-col items-start text-xs leading-[1.2] font-normal text-black">
                   <p
-                    className={`whitespace-pre-line ${
-                      bioExpanded ? "" : "line-clamp-6"
+                    className={`w-full whitespace-pre-line ${
+                      bioExpanded
+                        ? "talent-bio-scroll max-h-40 overflow-y-auto overscroll-contain"
+                        : "line-clamp-6"
                     }`}
                   >
                     {selected.bio}
