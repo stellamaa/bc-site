@@ -283,7 +283,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
             </p>
           ) : null}
           {creditLine ? (
-            <p className="text-xs font-normal leading-tight text-neutral-500 md:text-sm md:leading-none">
+            <p className=" font-normal text-xs leading-tight text-neutral-500 md:text-sm md:leading-none">
               {creditLine}
             </p>
           ) : null}
