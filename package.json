@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup:sanity-rebuild-webhook": "node scripts/setup-sanity-rebuild-webhook.mjs"
   },
   "dependencies": {
     "@portabletext/react": "^7.0.1",

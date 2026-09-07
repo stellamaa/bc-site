@@ -208,17 +208,25 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
       className="min-h-dvh scroll-mt-12 px-3 pt-3 pb-16 md:scroll-mt-20 md:px-8 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
     >
       <div className="flex items-start gap-4 md:grid md:grid-cols-[14rem_minmax(0,1fr)] md:items-start md:gap-x-16 md:gap-y-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-x-24">
-        <aside className="flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:contents md:w-auto md:max-w-none">
+        <aside
+          className={`flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-auto md:max-w-none ${
+            openWork
+              ? "md:col-start-1 md:row-start-1"
+              : "md:contents"
+          }`}
+        >
           <p
-            className={`mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:col-start-1 md:row-start-1 md:mb-0 md:text-xs ${
-              openWork ? "md:hidden" : ""
+            className={`mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:text-xs ${
+              openWork
+                ? "md:mb-5"
+                : "md:col-start-1 md:row-start-1 md:mb-0"
             }`}
           >
             Talent
           </p>
           <div
-            className={`flex min-h-0 w-full items-stretch gap-4 md:col-start-1 md:gap-5 ${
-              openWork ? "md:row-start-1" : "md:row-start-2"
+            className={`flex min-h-0 w-full items-stretch gap-4 md:gap-5 ${
+              openWork ? "" : "md:col-start-1 md:row-start-2"
             } ${namesScroll ? "shrink-0" : "flex-1"}`}
             style={
               namesMaxHeight && namesScroll
