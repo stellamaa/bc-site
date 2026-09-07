@@ -12,4 +12,6 @@ export type Talent = {
   imageAlt?: string;
   bio?: string;
   categories?: TalentCategoryRef[];
+  /** Drag order of reverse-linked works (from Studio). */
+  workOrder?: { _id: string }[];
 };

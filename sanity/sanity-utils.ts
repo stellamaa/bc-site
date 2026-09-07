@@ -87,6 +87,9 @@ const talentProjection = groq`{
     _id,
     title,
     "slug": slug.current
+  },
+  "workOrder": workOrder[]->{
+    _id
   }
 }`;
 

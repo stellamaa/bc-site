@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import TalentWorkOrderInput from "../components/TalentWorkOrderInput";
 
 const talent = defineType({
   name: "talent",
@@ -47,6 +48,22 @@ const talent = defineType({
           to: [{ type: "category" }],
         }),
       ],
+    }),
+    defineField({
+      name: "workOrder",
+      title: "Work display order",
+      type: "array",
+      description:
+        "Shows works already linked to this talent (set on each Work document). Drag to change the order on the site — no re-upload or re-adding needed.",
+      of: [
+        defineArrayMember({
+          type: "reference",
+          to: [{ type: "work" }],
+        }),
+      ],
+      components: {
+        input: TalentWorkOrderInput,
+      },
     }),
   ],
   preview: {

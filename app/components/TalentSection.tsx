@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
-import { sortByNameAsc } from "@/lib/order";
+import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Talent } from "@/types/talent";
 import type { Work } from "@/types/work";
@@ -49,12 +49,10 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
     [sortedTalents, selectedSlug],
   );
 
-  const talentWorks = useMemo(() => {
-    if (!selectedSlug) return [];
-    return works.filter((work) =>
-      (work.talent ?? []).some((t) => t.slug === selectedSlug),
-    );
-  }, [works, selectedSlug]);
+  const talentWorks = useMemo(
+    () => getWorksForTalent(works, selected),
+    [works, selected],
+  );
 
   const openWork = useMemo(
     () => talentWorks.find((work) => work._id === openWorkId) ?? null,

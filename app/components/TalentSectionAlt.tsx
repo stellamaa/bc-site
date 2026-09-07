@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
 import { replaceDocumentUrl } from "@/lib/documentUrl";
-import { sortByNameAsc } from "@/lib/order";
+import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import {
   getTalentLayoutFromEnv,
@@ -151,12 +151,10 @@ export default function TalentSectionAlt({
     [sortedTalents, selectedSlug],
   );
 
-  const talentWorks = useMemo(() => {
-    if (!selectedSlug) return [];
-    return works.filter((work) =>
-      (work.talent ?? []).some((t) => t.slug === selectedSlug),
-    );
-  }, [works, selectedSlug]);
+  const talentWorks = useMemo(
+    () => getWorksForTalent(works, selected),
+    [works, selected],
+  );
 
   const openWork = useMemo(
     () => talentWorks.find((work) => work._id === openWorkId) ?? null,
