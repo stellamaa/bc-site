@@ -59,6 +59,8 @@ const talent = defineType({
         defineArrayMember({
           type: "reference",
           to: [{ type: "work" }],
+          // Weak so a Work can still be deleted while a talent stores its order.
+          weak: true,
         }),
       ],
       components: {

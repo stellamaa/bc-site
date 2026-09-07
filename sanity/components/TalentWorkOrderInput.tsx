@@ -23,9 +23,9 @@ function publishedId(id: string) {
 }
 
 function refsEqual(a: Reference[] | undefined, b: Reference[]) {
-  const left = (a ?? []).map((item) => item._ref).join(",");
-  const right = b.map((item) => item._ref).join(",");
-  return left === right;
+  const serialize = (refs: Reference[]) =>
+    refs.map((item) => `${item._ref}:${item._weak ? "weak" : "strong"}`).join(",");
+  return serialize(a ?? []) === serialize(b);
 }
 
 /**
@@ -116,6 +116,7 @@ export default function TalentWorkOrderInput(props: ArrayOfObjectsInputProps) {
           _type: "reference",
           _ref: id,
           _key: keyByRef.get(id) || randomKey(12),
+          _weak: true,
         };
       });
 
