@@ -8,7 +8,9 @@ import {
   useClient,
   useFormValue,
 } from "sanity";
-import { Box, Card, Flex, Stack, Text } from "@sanity/ui";
+// v5 removed TrashIcon from the package root; it lives on its own subpath.
+import { TrashIcon } from "@sanity/icons/Trash";
+import { Box, Button, Card, Flex, Stack, Text, useToast } from "@sanity/ui";
 import { randomKey } from "@sanity/util/content";
 
 type LinkedWork = {
@@ -35,9 +37,12 @@ export default function TalentWorkOrderInput(props: ArrayOfObjectsInputProps) {
   const documentId = useFormValue(["_id"]) as string | undefined;
   const client = useClient({ apiVersion: "2025-01-01" });
 
+  const toast = useToast();
+
   const [linked, setLinked] = useState<LinkedWork[]>([]);
   const [loading, setLoading] = useState(true);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const orderRefs = useMemo(
     () => ((value ?? []) as Reference[]).filter((item) => Boolean(item?._ref)),
@@ -123,6 +128,57 @@ export default function TalentWorkOrderInput(props: ArrayOfObjectsInputProps) {
   // Only persist when the editor reorders — linked works still appear above
   // from the live query without requiring an "Add" click.
 
+  /**
+   * The list is built from Work → Talent references, so removing here unlinks
+   * this talent on the Work document. The Work itself is never deleted.
+   */
+  const removeWork = useCallback(
+    async (work: LinkedWork) => {
+      if (readOnly || !documentId) return;
+
+      const talentId = publishedId(documentId);
+      const workId = publishedId(work._id);
+      const label = work.title || "Untitled work";
+
+      const confirmed = window.confirm(
+        `Remove "${label}" from this talent?\n\nThis unlinks the talent on the Work document. The Work itself is not deleted.`,
+      );
+      if (!confirmed) return;
+
+      setRemovingId(workId);
+      try {
+        const existingIds = await client.fetch<string[]>(
+          `*[_id in [$workId, $draftId]]._id`,
+          { workId, draftId: `drafts.${workId}` },
+        );
+
+        const transaction = existingIds.reduce(
+          (tx, id) => tx.patch(id, (patch) => patch.unset([`talent[_ref=="${talentId}"]`])),
+          client.transaction(),
+        );
+        await transaction.commit();
+
+        setLinked((prev) =>
+          prev.filter((item) => publishedId(item._id) !== workId),
+        );
+        writeOrder(items.filter((item) => publishedId(item._id) !== workId));
+
+        toast.push({
+          status: "success",
+          title: `Removed "${label}"`,
+        });
+      } catch {
+        toast.push({
+          status: "error",
+          title: `Could not remove "${label}"`,
+        });
+      } finally {
+        setRemovingId(null);
+      }
+    },
+    [client, documentId, items, readOnly, toast, writeOrder],
+  );
+
   const onDrop = (toIndex: number) => {
     if (readOnly || dragFrom === null || dragFrom === toIndex) {
       setDragFrom(null);
@@ -175,7 +231,8 @@ export default function TalentWorkOrderInput(props: ArrayOfObjectsInputProps) {
   return (
     <Stack space={2}>
       <Text size={1} muted>
-        Linked from Work documents. Drag to set the order on the site.
+        Linked from Work documents. Drag to set the order on the site. Remove
+        unlinks the talent on that Work — the Work itself is kept.
       </Text>
       <Stack space={1}>
         {items.map((work, index) => (
@@ -206,9 +263,24 @@ export default function TalentWorkOrderInput(props: ArrayOfObjectsInputProps) {
                   ⋮⋮
                 </Text>
               </Box>
-              <Text size={1} weight="medium">
-                {work.title || "Untitled work"}
-              </Text>
+              <Box flex={1}>
+                <Text size={1} weight="medium">
+                  {work.title || "Untitled work"}
+                </Text>
+              </Box>
+              <Button
+                mode="bleed"
+                tone="critical"
+                padding={2}
+                icon={TrashIcon}
+                disabled={readOnly || removingId === publishedId(work._id)}
+                title="Remove this work from the talent"
+                aria-label={`Remove ${work.title || "Untitled work"}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void removeWork(work);
+                }}
+              />
             </Flex>
           </Card>
         ))}
