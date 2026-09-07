@@ -62,6 +62,29 @@ body {
   }
 }
 
+@keyframes clients-marquee {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.clients-marquee-track {
+  animation: clients-marquee 45s linear infinite;
+}
+
+.clients-marquee:hover .clients-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clients-marquee-track {
+    animation: none;
+  }
+}
+
 /* Desktop: nav swaps full-viewport panels — no document scroll */
 html.desktop-section-pager,
 html.desktop-section-pager body {

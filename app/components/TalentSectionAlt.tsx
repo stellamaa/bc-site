@@ -5,8 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
-import { replaceDocumentUrl } from "@/lib/documentUrl";
+import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
 import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
+import { talentPath, workPath } from "@/lib/sharePaths";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import {
   getTalentLayoutFromEnv,
@@ -224,6 +225,7 @@ export default function TalentSectionAlt({
                       type="button"
                       onClick={() => {
                         setSelectedSlug(talent.slug!);
+                        pushAppPath(talentPath(talent.slug!));
                         closeMenu();
                         requestAnimationFrame(() => {
                           document
@@ -306,7 +308,10 @@ export default function TalentSectionAlt({
             <div ref={expandRef} className="scroll-mt-16">
               <WorkExpand
                 work={openWork}
-                onClose={() => setOpenWorkId(null)}
+                onClose={() => {
+                  setOpenWorkId(null);
+                  if (selectedSlug) pushAppPath(talentPath(selectedSlug));
+                }}
               />
             </div>
           ) : null}
@@ -330,9 +335,17 @@ export default function TalentSectionAlt({
                         <button
                           type="button"
                           onClick={() =>
-                            setOpenWorkId((prev) =>
-                              prev === work._id ? null : work._id,
-                            )
+                            setOpenWorkId((prev) => {
+                              const next = prev === work._id ? null : work._id;
+                              if (!next) {
+                                if (selectedSlug) {
+                                  pushAppPath(talentPath(selectedSlug));
+                                }
+                                return null;
+                              }
+                              if (work.slug) pushAppPath(workPath(work.slug));
+                              return next;
+                            })
                           }
                           aria-expanded={isOpen}
                           className="flex w-full flex-col gap-2 text-left"

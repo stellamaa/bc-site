@@ -7,6 +7,7 @@ import {
 import { About } from "@/types/about";
 import { Category } from "@/types/category";
 import { LandingPage } from "@/types/landingPage";
+import { Logo } from "@/types/logo";
 import { Talent } from "@/types/talent";
 import { Work } from "@/types/work";
 import { WorkPage } from "@/types/workPage";
@@ -122,6 +123,13 @@ const aboutProjection = groq`{
   linkedin
 }`;
 
+const logoProjection = groq`{
+  _id,
+  title,
+  "image": image.asset->url,
+  "imageAlt": image.alt
+}`;
+
 export async function getLandingPage(): Promise<LandingPage | null> {
   const client = getSanityClient();
   return client.fetch(
@@ -214,5 +222,12 @@ export async function getWorksByTalentSlug(slug: string): Promise<Work[]> {
   return client.fetch(
     groq`*[_type == "work" && $slug in talent[]->slug.current] | order(_createdAt desc) ${workProjection}`,
     { slug },
+  );
+}
+
+export async function getLogos(): Promise<Logo[]> {
+  const client = getSanityClient();
+  return client.fetch(
+    groq`*[_type == "logo" && defined(image.asset)] | order(title asc) ${logoProjection}`,
   );
 }

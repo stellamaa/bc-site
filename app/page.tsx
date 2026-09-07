@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import AboutSection from "@/app/components/AboutSection";
+import ClientsCarousel from "@/app/components/ClientsCarousel";
 import ContactSection from "@/app/components/ContactSection";
 import IntroLoader from "@/app/components/IntroLoader";
 import LandingHero from "@/app/components/LandingHero";
@@ -13,6 +14,7 @@ import {
   getAbout,
   getCategories,
   getLandingPage,
+  getLogos,
   getTalents,
   getWorks,
 } from "@/sanity/sanity-utils";
@@ -24,15 +26,23 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [landing, landingCategories, workCategories, works, talents, about] =
-    await Promise.all([
-      getLandingPage(),
-      getCategories({ forLanding: true }),
-      getCategories({ forWork: true }),
-      getWorks(),
-      getTalents(),
-      getAbout(),
-    ]);
+  const [
+    landing,
+    landingCategories,
+    workCategories,
+    works,
+    talents,
+    about,
+    logos,
+  ] = await Promise.all([
+    getLandingPage(),
+    getCategories({ forLanding: true }),
+    getCategories({ forWork: true }),
+    getWorks(),
+    getTalents(),
+    getAbout(),
+    getLogos(),
+  ]);
 
   const description = landing?.description ?? null;
   const introMedia = collectIntroMedia(works);
@@ -60,6 +70,8 @@ export default async function Home() {
             description={description}
             categories={landingCategories}
           />
+
+          <ClientsCarousel logos={logos} />
         </section>
 
         <Suspense fallback={<div id="work" className="min-h-dvh" />}>

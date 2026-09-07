@@ -4,7 +4,9 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
+import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
 import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
+import { talentPath, workPath } from "@/lib/sharePaths";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Talent } from "@/types/talent";
 import type { Work } from "@/types/work";
@@ -30,6 +32,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [bioExpanded, setBioExpanded] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isXlDesktop, setIsXlDesktop] = useState(false);
   const [openWorkId, setOpenWorkId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const namesListRef = useRef<HTMLUListElement>(null);
@@ -62,6 +65,14 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
     const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1280px)");
+    const update = () => setIsXlDesktop(mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
@@ -166,10 +177,29 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
     });
   }, [openWork?._id, isDesktop]);
 
-  const closeWork = useCallback(() => setOpenWorkId(null), []);
+  const closeWork = useCallback(() => {
+    setOpenWorkId(null);
+    if (selectedSlug) {
+      pushAppPath(talentPath(selectedSlug));
+    } else {
+      replaceDocumentUrl("", "talent");
+    }
+  }, [selectedSlug]);
 
   const selectWork = (workId: string) => {
-    setOpenWorkId((prev) => (prev === workId ? null : workId));
+    setOpenWorkId((prev) => {
+      const next = prev === workId ? null : workId;
+      if (!next) {
+        if (selectedSlug) pushAppPath(talentPath(selectedSlug));
+        else replaceDocumentUrl("", "talent");
+        return null;
+      }
+      const work = talentWorks.find((item) => item._id === workId);
+      if (work?.slug) {
+        pushAppPath(workPath(work.slug));
+      }
+      return next;
+    });
   };
 
   /** Desktop: same single-row strip as under expanded work */
@@ -205,9 +235,9 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
   return (
     <section
       id="talent"
-      className="min-h-dvh scroll-mt-12 px-3 pt-3 pb-16 md:scroll-mt-20 md:px-8 md:pt-8 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
+      className="min-h-dvh scroll-mt-12 px-3 pt-3 pb-16 md:scroll-mt-20 md:px-6 md:pt-6 md:pr-6 md:pb-10 md:pl-10 lg:px-8 lg:pt-8 lg:pr-8 lg:pb-16 lg:pl-16 xl:pb-24 xl:pl-24"
     >
-      <div className="flex items-start gap-4 md:grid md:grid-cols-[14rem_minmax(0,1fr)] md:items-start md:gap-x-16 md:gap-y-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-x-24">
+      <div className="flex items-start gap-4 md:grid md:grid-cols-[12rem_minmax(0,1fr)] md:items-start md:gap-x-8 md:gap-y-4 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-16 lg:gap-y-5 xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-x-24">
         <aside
           className={`flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-auto md:max-w-none ${
             openWork
@@ -236,7 +266,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
           >
             <ul
               ref={namesListRef}
-              className={`flex w-full flex-col gap-4 ${
+              className={`flex w-full flex-col gap-3 md:gap-3 lg:gap-4 ${
                 namesScroll
                   ? "talent-names-scroll h-full md:overflow-y-auto"
                   : ""
@@ -249,9 +279,15 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedSlug((prev) =>
-                          prev === talent.slug ? null : talent.slug!,
-                        )
+                        setSelectedSlug((prev) => {
+                          const next = prev === talent.slug ? null : talent.slug!;
+                          if (next) {
+                            pushAppPath(talentPath(next));
+                          } else {
+                            replaceDocumentUrl("", "talent");
+                          }
+                          return next;
+                        })
                       }
                       className={`w-full rounded-full border border-black px-5 py-2 text-center text-[10px] font-medium leading-tight uppercase transition-colors md:text-base ${
                         active
@@ -288,13 +324,13 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
             >
               <WorkExpand work={openWork} onClose={closeWork} />
               {talentWorks.length > 0 ? (
-                <div ref={worksAnchorRef} className="md:mt-0 md:ml-12">
-                  <div className="md:max-w-[calc(5*9rem+4*2.5rem)] lg:max-w-[calc(5*9.5rem+4*2.5rem)]">
+                <div ref={worksAnchorRef} className="md:mt-0 md:ml-8 lg:ml-12">
+                  <div className="md:max-w-[calc(5*8rem+4*1.25rem)] lg:max-w-[calc(5*9rem+4*2rem)] xl:max-w-[calc(5*9.5rem+4*2.5rem)]">
                     <div
                       ref={scrollRef}
-                      className="talent-works-scroll flex w-full gap-x-10 overflow-x-auto"
+                      className="talent-works-scroll flex w-full gap-x-5 overflow-x-auto lg:gap-x-8 xl:gap-x-10"
                     >
-                      <ul className="flex w-max flex-nowrap gap-x-10">
+                      <ul className="flex w-max flex-nowrap gap-x-5 lg:gap-x-8 xl:gap-x-10">
                         {talentWorks.map((work, index) => {
                           const n = formatIndex(index);
                           const isOpen = openWorkId === work._id;
@@ -304,7 +340,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                             <li
                               key={work._id}
                               data-work-id={work._id}
-                              className="group w-[9rem] shrink-0 lg:w-[9.5rem]"
+                              className="group w-[8rem] shrink-0 lg:w-[9rem] xl:w-[9.5rem]"
                             >
                               <button
                                 type="button"
@@ -384,9 +420,9 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
             <>
               <div ref={expandAnchorRef} className="sr-only" aria-hidden />
               <div
-                className="flex min-h-0 flex-col md:justify-between"
+                className="flex min-h-0 flex-col md:justify-start xl:justify-between"
                 style={
-                  namesMaxHeight
+                  namesMaxHeight && isXlDesktop
                     ? {
                         height: namesMaxHeight,
                         minHeight: namesMaxHeight,
@@ -396,8 +432,8 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                 }
               >
                 {/* Profile */}
-                <div className="flex min-h-0 flex-row items-start gap-4 overflow-hidden md:gap-8">
-                  <div className="relative size-[7rem] shrink-0 overflow-hidden bg-neutral-100 pr-3 sm:size-24 md:size-[8.5rem] lg:size-36">
+                <div className="flex min-h-0 flex-row items-start gap-3 overflow-hidden md:gap-5 lg:gap-8">
+                  <div className="relative size-[7rem] shrink-0 overflow-hidden bg-neutral-100 pr-3 sm:size-24 md:size-[7rem] lg:size-[8.5rem] xl:size-36">
                     {selected.image ? (
                       <Image
                         src={selected.image}
@@ -453,19 +489,19 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                 {talentWorks.length > 0 ? (
                   <div
                     ref={worksAnchorRef}
-                    className="mt-4 shrink-0 md:mt-auto"
+                    className="mt-4 shrink-0 md:mt-4 lg:mt-6 xl:mt-auto"
                   >
-                    <div className="md:max-w-[calc(5*9rem+4*2.5rem)] lg:max-w-[calc(5*9.5rem+4*2.5rem)]">
+                    <div className="md:max-w-[calc(5*8rem+4*1.25rem)] lg:max-w-[calc(5*9rem+4*2rem)] xl:max-w-[calc(5*9.5rem+4*2.5rem)]">
                       <div
                         ref={scrollRef}
                         className={
                           stripLayout
-                            ? "talent-works-scroll flex w-full gap-x-10 overflow-x-auto"
+                            ? "talent-works-scroll flex w-full gap-x-5 overflow-x-auto lg:gap-x-8 xl:gap-x-10"
                             : "talent-works-scroll flex w-full snap-x snap-mandatory overflow-x-auto"
                         }
                       >
                         {stripLayout ? (
-                          <ul className="flex w-max flex-nowrap gap-x-10">
+                          <ul className="flex w-max flex-nowrap gap-x-5 lg:gap-x-8 xl:gap-x-10">
                             {talentWorks.map((work, index) => {
                               const n = formatIndex(index);
                               const isOpen = openWorkId === work._id;
@@ -475,7 +511,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                                 <li
                                   key={work._id}
                                   data-work-id={work._id}
-                                  className="group relative w-[9rem] shrink-0 lg:w-[9.5rem]"
+                                  className="group relative w-[8rem] shrink-0 lg:w-[9rem] xl:w-[9.5rem]"
                                 >
                                   <button
                                     type="button"
@@ -599,20 +635,18 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                           ))
                         )}
                       </div>
+                      {stripLayout ? (
+                        <ScrollTrack
+                          scrollRef={scrollRef}
+                          visible={showScrollTrack}
+                          itemCount={talentWorks.length}
+                          width="full"
+                        />
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
               </div>
-              {talentWorks.length > 0 && stripLayout ? (
-                <div className="md:max-w-[calc(5*9rem+4*2.5rem)] lg:max-w-[calc(5*9.5rem+4*2.5rem)]">
-                  <ScrollTrack
-                    scrollRef={scrollRef}
-                    visible={showScrollTrack}
-                    itemCount={talentWorks.length}
-                    width="full"
-                  />
-                </div>
-              ) : null}
             </>
           )}
         </div>

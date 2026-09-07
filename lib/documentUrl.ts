@@ -1,3 +1,5 @@
+import { absoluteAppPath } from "@/lib/sharePaths";
+
 /**
  * Build a same-document URL for `history.pushState` / `replaceState`.
  *
@@ -26,10 +28,8 @@ function notifyLocationChange() {
 
 function safeHistoryWrite(
   method: "pushState" | "replaceState",
-  search: string,
-  hash = "",
+  url: string,
 ) {
-  const url = documentUrl(search, hash);
   const write = () => {
     try {
       window.history[method](window.history.state, "", url);
@@ -42,10 +42,35 @@ function safeHistoryWrite(
   queueMicrotask(write);
 }
 
+function withSearchHash(path: string, search = "", hash = "") {
+  const q = search
+    ? search.startsWith("?")
+      ? search
+      : `?${search}`
+    : "";
+  const h = hash ? (hash.startsWith("#") ? hash : `#${hash}`) : "";
+  return `${path}${q}${h}`;
+}
+
 export function replaceDocumentUrl(search: string, hash = "") {
-  safeHistoryWrite("replaceState", search, hash);
+  safeHistoryWrite("replaceState", documentUrl(search, hash));
 }
 
 export function pushDocumentUrl(search: string, hash = "") {
-  safeHistoryWrite("pushState", search, hash);
+  safeHistoryWrite("pushState", documentUrl(search, hash));
+}
+
+/** Address bar → app path (e.g. `/work/slug`) without a full navigation. */
+export function pushAppPath(path: string, search = "", hash = "") {
+  safeHistoryWrite(
+    "pushState",
+    withSearchHash(absoluteAppPath(path), search, hash),
+  );
+}
+
+export function replaceAppPath(path: string, search = "", hash = "") {
+  safeHistoryWrite(
+    "replaceState",
+    withSearchHash(absoluteAppPath(path), search, hash),
+  );
 }

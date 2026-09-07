@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
-import { replaceDocumentUrl } from "@/lib/documentUrl";
+import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
+import { workPath } from "@/lib/sharePaths";
 import { shuffleArray } from "@/lib/order";
 import {
   getCategorySlugsFromLocation,
@@ -136,10 +137,34 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
     });
   }, [openWork?._id, isDesktop]);
 
-  const closeWork = useCallback(() => setOpenWorkId(null), []);
+  const closeWork = useCallback(() => {
+    setOpenWorkId(null);
+    replaceDocumentUrl(
+      typeof window !== "undefined"
+        ? window.location.search.replace(/^\?/, "")
+        : "",
+      "work",
+    );
+  }, []);
 
   const selectWork = (workId: string) => {
-    setOpenWorkId((prev) => (prev === workId ? null : workId));
+    setOpenWorkId((prev) => {
+      const next = prev === workId ? null : workId;
+      if (!next) {
+        replaceDocumentUrl(
+          typeof window !== "undefined"
+            ? window.location.search.replace(/^\?/, "")
+            : "",
+          "work",
+        );
+        return null;
+      }
+      const work = displayWorks.find((item) => item._id === workId);
+      if (work?.slug) {
+        pushAppPath(workPath(work.slug));
+      }
+      return next;
+    });
   };
 
   // BC / landing: close expanded project
@@ -149,6 +174,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
         ?.section;
       if (section === "landing") {
         setOpenWorkId(null);
+        replaceDocumentUrl("", "landing");
       }
     };
     window.addEventListener("bc:section", onSection);
@@ -186,13 +212,13 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
   return (
     <section
       id="work"
-      className="min-h-dvh scroll-mt-12 px-4 pt-4 pb-16 md:scroll-mt-20 md:pt-18 md:pr-8 md:pb-24 md:pl-16 lg:pl-24"
+      className="min-h-dvh scroll-mt-12 px-4 pt-4 pb-16 md:scroll-mt-20 md:pt-10 md:pr-8 md:pb-10 md:pl-12 lg:pt-14 lg:pb-16 lg:pl-16 xl:pt-18 xl:pb-24 xl:pl-24"
     >
       {/*
         Mobile: expand spans full width above filters + grid.
         Desktop: expand sits in the content column above the grid (filters stay left).
       */}
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-0 md:gap-x-16 lg:gap-x-24">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-0 md:gap-x-8 lg:gap-x-16 xl:gap-x-24">
         {openWork ? (
           <div
             ref={expandAnchorRef}
@@ -248,7 +274,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
             <div
               className={
                 stripLayout
-                  ? "relative md:max-w-[calc(6*9rem+5*2.5rem)] lg:max-w-[calc(6*9.5rem+5*2.5rem)]"
+                  ? "relative md:max-w-[calc(6*8rem+5*1.25rem)] lg:max-w-[calc(6*9rem+5*2rem)] xl:max-w-[calc(6*9.5rem+5*2.5rem)]"
                   : pageScrollLayout
                     ? "relative"
                     : undefined
@@ -258,14 +284,14 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                 ref={horizontalScroll ? scrollRef : undefined}
                 className={
                   stripLayout
-                    ? "work-works-scroll flex w-full gap-x-10 overflow-x-auto"
+                    ? "work-works-scroll flex w-full gap-x-5 overflow-x-auto lg:gap-x-8 xl:gap-x-10"
                     : pageScrollLayout
                       ? "work-works-scroll flex w-full snap-x snap-mandatory overflow-x-auto"
                       : undefined
                 }
               >
                 {stripLayout ? (
-                  <ul className="flex w-max flex-nowrap gap-x-10">
+                  <ul className="flex w-max flex-nowrap gap-x-5 lg:gap-x-8 xl:gap-x-10">
                     {displayWorks.map((work, index) => {
                       const n = formatIndex(index);
                       const isOpen = openWorkId === work._id;
@@ -276,7 +302,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                         <li
                           key={work._id}
                           data-work-id={work._id}
-                          className="group w-[9rem] shrink-0 lg:w-[9.5rem]"
+                          className="group w-[8rem] shrink-0 lg:w-[9rem] xl:w-[9.5rem]"
                         >
                           <button
                             type="button"
@@ -353,10 +379,10 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                       key={page[0]?._id ?? pageIndex}
                       className={
                         desktopPageScroll
-                          ? "grid w-full shrink-0 snap-start grid-cols-3 gap-x-12 gap-y-14"
+                          ? "grid w-full shrink-0 snap-start grid-cols-3 gap-x-5 gap-y-6 lg:gap-x-8 lg:gap-y-10 xl:gap-x-12 xl:gap-y-14"
                           : mobilePageScroll
                             ? "grid w-full shrink-0 snap-start grid-cols-2 gap-x-3 gap-y-6"
-                            : "grid grid-cols-2 gap-x-3 gap-y-6 md:gap-x-12 md:gap-y-14 lg:grid-cols-3"
+                            : "grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-5 md:gap-y-6 lg:gap-x-8 lg:gap-y-10 xl:gap-x-12 xl:gap-y-14"
                       }
                     >
                       {page.map((work, indexInPage) => {
@@ -372,7 +398,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                               type="button"
                               onClick={() => selectWork(work._id)}
                               aria-expanded={isOpen}
-                              className="flex w-full flex-col gap-2 text-left md:max-w-[9rem] lg:max-w-[9.5rem]"
+                              className="flex w-full flex-col gap-1.5 text-left md:max-w-[7.5rem] lg:max-w-[9rem] xl:max-w-[9.5rem] md:gap-2"
                             >
                               <span
                                 className={`text-sm font-light tabular-nums transition-colors md:text-lg lg:text-3xl ${

@@ -141,11 +141,13 @@ const work = defineType({
       name: "talent",
       title: "Talent",
       type: "array",
-      description: "People with a Talent profile who worked on this project.",
+      description:
+        "People with a Talent profile who worked on this project. Weak links — deleting a talent is allowed even if works still list them.",
       of: [
         defineArrayMember({
           type: "reference",
           to: [{ type: "talent" }],
+          weak: true,
         }),
       ],
     }),

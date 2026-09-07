@@ -5,12 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import WorkExpand from "@/app/components/WorkExpand";
 import WorkSection from "@/app/components/WorkSection";
-import { replaceDocumentUrl } from "@/lib/documentUrl";
+import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
 import { shuffleArray } from "@/lib/order";
 import {
   getCategorySlugsFromLocation,
   getWorkCreditLine,
 } from "@/lib/workCredits";
+import { workPath } from "@/lib/sharePaths";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
@@ -332,7 +333,15 @@ export default function WorkSectionAlt({
         <div ref={expandRef} className="mb-4 scroll-mt-16">
           <WorkExpand
             work={openWork}
-            onClose={() => setOpenWorkId(null)}
+            onClose={() => {
+              setOpenWorkId(null);
+              replaceDocumentUrl(
+                typeof window !== "undefined"
+                  ? window.location.search.replace(/^\?/, "")
+                  : "",
+                "work",
+              );
+            }}
           />
         </div>
       ) : null}
@@ -353,9 +362,20 @@ export default function WorkSectionAlt({
                   <button
                     type="button"
                     onClick={() =>
-                      setOpenWorkId((prev) =>
-                        prev === work._id ? null : work._id,
-                      )
+                      setOpenWorkId((prev) => {
+                        const next = prev === work._id ? null : work._id;
+                        if (!next) {
+                          replaceDocumentUrl(
+                            typeof window !== "undefined"
+                              ? window.location.search.replace(/^\?/, "")
+                              : "",
+                            "work",
+                          );
+                          return null;
+                        }
+                        if (work.slug) pushAppPath(workPath(work.slug));
+                        return next;
+                      })
                     }
                     aria-expanded={isOpen}
                     className="flex w-full flex-col gap-2 text-left"
