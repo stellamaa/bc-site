@@ -84,6 +84,9 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const canNext = galleryIndex < galleryLength - 1;
   const isVideoPlayer = mediaKind === "video" || mediaKind === "videoGallery";
 
+  // Once an uploaded video starts, the browser's own bar gives it a timeline.
+  const nativeControls = isVideoPlayer && video?.kind === "file" && playing;
+
   const showPlayOverlay =
     isVideoPlayer &&
     video &&
@@ -92,11 +95,20 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const showPauseHitTarget =
     isVideoPlayer && video?.kind === "file" && playing && !isPaused;
 
+  /**
+   * With the timeline on screen the overlay can't swallow the whole frame, so
+   * only the glyph takes clicks — the bar and the video itself stay live.
+   */
+  const overlayReach = nativeControls ? "pointer-events-none" : "";
+  const glyphReach = nativeControls ? "pointer-events-auto cursor-pointer" : "";
+
   const handlePlay = async () => {
     setPlaying(true);
     if (video?.kind === "file" && videoRef.current) {
       try {
         await videoRef.current.play();
+        // Focused, the arrow keys seek and space toggles playback.
+        videoRef.current.focus({ preventScroll: true });
       } catch {
         // Autoplay may still be blocked.
       }
@@ -146,12 +158,15 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
                 poster={poster}
                 className={`absolute inset-0 h-full w-full object-cover ${playing ? "" : "pointer-events-none"}`}
                 playsInline
-                controls={false}
+                controls={nativeControls}
+                controlsList="nodownload"
                 onPlay={() => setIsPaused(false)}
                 onPause={() => setIsPaused(true)}
+                // Back to the first frame and the "(>)" overlay when it ends.
                 onEnded={() => {
                   setPlaying(false);
                   setIsPaused(true);
+                  if (videoRef.current) videoRef.current.currentTime = 0;
                 }}
               />
             ) : null}
@@ -176,10 +191,12 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               <button
                 type="button"
                 onClick={handlePlay}
-                className="absolute inset-0 z-10 flex items-center justify-center pb-2 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[50cqh] leading-none md:pb-6"
+                className={`absolute inset-0 z-10 flex items-center justify-center pb-2 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[50cqh] leading-none md:pb-6 ${overlayReach}`}
                 aria-label="Play video"
               >
-                <span>{playing && isPaused ? "(||)" : "(>)"}</span>
+                <span className={glyphReach}>
+                  {playing && isPaused ? "(||)" : "(>)"}
+                </span>
               </button>
             ) : null}
 
@@ -187,10 +204,12 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               <button
                 type="button"
                 onClick={handlePause}
-                className="absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity text-[50cqh] leading-none md:pb-6"
+                className={`absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity text-[50cqh] leading-none md:pb-6 ${overlayReach}`}
                 aria-label="Pause video"
               >
-                <span className="opacity-0 md:group-hover:opacity-100">
+                <span
+                  className={`opacity-0 md:group-hover:opacity-100 ${glyphReach}`}
+                >
                   (||)
                 </span>
               </button>

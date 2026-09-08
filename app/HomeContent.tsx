@@ -110,10 +110,11 @@ export default async function HomeContent({
           email={about?.email}
           instagram={about?.instagram}
           linkedin={about?.linkedin}
+          // Mobile: logos close out the page, along the bottom of Contact.
+          footer={
+            <ClientsCarousel logos={logos} className="mt-auto md:hidden" />
+          }
         />
-
-        {/* Bottom padding matches Contact's top padding. */}
-        <ClientsCarousel logos={logos} className="pt-0 pb-16 md:hidden" />
       </SectionPager>
     </main>
   );

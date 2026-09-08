@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+  type RefObject,
+} from "react";
 
 type ScrollTrackProps = {
   scrollRef: RefObject<HTMLElement | null>;
@@ -21,6 +27,14 @@ type ScrollTrackProps = {
   tight?: boolean;
 };
 
+/** Where along the track the pointer sits, 0–1. */
+function trackRatio(clientPos: number, rect: DOMRect, isVertical: boolean) {
+  const start = isVertical ? rect.top : rect.left;
+  const length = isVertical ? rect.height : rect.width;
+  if (length <= 0) return 0;
+  return Math.min(1, Math.max(0, (clientPos - start) / length));
+}
+
 /** Grey track with black thumb synced to scroll position. */
 export default function ScrollTrack({
   scrollRef,
@@ -35,6 +49,11 @@ export default function ScrollTrack({
   const isVertical = orientation === "vertical";
   const [thumb, setThumb] = useState({ offset: 0, size: 100 });
   const [ends, setEnds] = useState({ left: 0, right: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragCleanup = useRef<(() => void) | null>(null);
+
+  // A drag can outlive the track (a filter change hides it mid-gesture).
+  useEffect(() => () => dragCleanup.current?.(), []);
 
   // Thumb position follows scroll
   useEffect(() => {
@@ -113,26 +132,92 @@ export default function ScrollTrack({
 
   if (!visible) return null;
 
-  const seek = (clientPos: number, target: HTMLElement) => {
+  /**
+   * Grab the thumb and the content follows the pointer; press anywhere else on
+   * the track and it glides there first, then follows.
+   */
+  const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     const el = scrollRef.current;
-    if (!el) return;
-    const rect = target.getBoundingClientRect();
-    if (isVertical) {
-      const ratio = Math.min(
-        1,
-        Math.max(0, (clientPos - rect.top) / rect.height),
+    if (!el || event.button !== 0) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const view = isVertical ? el.clientHeight : el.clientWidth;
+    const content = isVertical ? el.scrollHeight : el.scrollWidth;
+    const max = content - view;
+    const size = view / content;
+    // How much of the track the thumb can travel over.
+    const travel = 1 - size;
+    if (max <= 0 || travel <= 0) return;
+
+    const pointer = (e: { clientX: number; clientY: number }) =>
+      isVertical ? e.clientY : e.clientX;
+    const scrolled = () => (isVertical ? el.scrollTop : el.scrollLeft);
+
+    const ratio = trackRatio(pointer(event), rect, isVertical);
+    const thumbStart = (scrolled() / max) * travel;
+    const onThumb = ratio >= thumbStart && ratio <= thumbStart + size;
+    // Off the thumb, the press centres it under the pointer.
+    const grab = onThumb ? ratio - thumbStart : size / 2;
+
+    const offsetFor = (clientPos: number) => {
+      const start = trackRatio(clientPos, rect, isVertical) - grab;
+      return Math.min(1, Math.max(0, start / travel)) * max;
+    };
+
+    // Snap would yank the list back mid-drag; let it settle on release instead.
+    const snapped = getComputedStyle(el).scrollSnapType !== "none";
+    if (snapped) el.style.scrollSnapType = "none";
+
+    if (!onThumb) {
+      const to = offsetFor(pointer(event));
+      el.scrollTo(
+        isVertical
+          ? { top: to, behavior: "smooth" }
+          : { left: to, behavior: "smooth" },
       );
-      const max = el.scrollHeight - el.clientHeight;
-      el.scrollTo({ top: ratio * max, behavior: "smooth" });
-      return;
     }
-    const ratio = Math.min(
-      1,
-      Math.max(0, (clientPos - rect.left) / rect.width),
-    );
-    const max = el.scrollWidth - el.clientWidth;
-    el.scrollTo({ left: ratio * max, behavior: "smooth" });
+
+    const onMove = (e: globalThis.PointerEvent) => {
+      const to = offsetFor(pointer(e));
+      if (isVertical) el.scrollTop = to;
+      else el.scrollLeft = to;
+    };
+
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      dragCleanup.current = null;
+      setDragging(false);
+      if (!snapped) return;
+      el.style.scrollSnapType = "";
+      const page = view;
+      const to = Math.min(max, Math.max(0, Math.round(scrolled() / page) * page));
+      el.scrollTo(
+        isVertical
+          ? { top: to, behavior: "smooth" }
+          : { left: to, behavior: "smooth" },
+      );
+    };
+
+    event.preventDefault();
+    setDragging(true);
+    dragCleanup.current = onUp;
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   };
+
+  const grabCursor = dragging ? "cursor-grabbing" : "cursor-grab";
+  // The bar is 2px; the pointer gets a band either side of it to aim at.
+  const hitArea = (
+    <span
+      className={`absolute ${
+        // Leaner above, where the thumbnails sit, than in the space below.
+        isVertical ? "inset-y-0 -left-2.5 -right-2.5" : "inset-x-0 -top-2 -bottom-3"
+      }`}
+    />
+  );
 
   if (isVertical) {
     return (
@@ -141,11 +226,14 @@ export default function ScrollTrack({
         aria-hidden
       >
         <div
-          className="relative h-full w-[2px] cursor-pointer bg-neutral-300"
-          onClick={(e) => seek(e.clientY, e.currentTarget)}
+          className={`relative h-full w-[2px] touch-none select-none bg-neutral-300 ${grabCursor}`}
+          onPointerDown={startDrag}
         >
+          {hitArea}
           <div
-            className="absolute left-0 w-[2px] bg-black transition-[top,height] duration-75"
+            className={`absolute left-0 w-[2px] bg-black ${
+              dragging ? "" : "transition-[top,height] duration-75"
+            }`}
             style={{ top: `${thumb.offset}%`, height: `${thumb.size}%` }}
           />
         </div>
@@ -155,11 +243,14 @@ export default function ScrollTrack({
 
   const track = (
     <div
-      className="relative h-[2px] w-full cursor-pointer bg-neutral-300"
-      onClick={(e) => seek(e.clientX, e.currentTarget)}
+      className={`relative h-[2px] w-full touch-none select-none bg-neutral-300 ${grabCursor}`}
+      onPointerDown={startDrag}
     >
+      {hitArea}
       <div
-        className="absolute top-0 h-[2px] bg-black transition-[left,width] duration-75"
+        className={`absolute top-0 h-[2px] bg-black ${
+          dragging ? "" : "transition-[left,width] duration-75"
+        }`}
         style={{ left: `${thumb.offset}%`, width: `${thumb.size}%` }}
       />
     </div>

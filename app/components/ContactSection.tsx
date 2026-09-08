@@ -1,9 +1,13 @@
+import type { ReactNode } from "react";
+
 type ContactSectionProps = {
   phone?: string | null;
   address?: string | null;
   email?: string | null;
   instagram?: string | null;
   linkedin?: string | null;
+  /** Sits at the foot of the section — the client logos on mobile. */
+  footer?: ReactNode;
 };
 
 function mapsUrl(address: string) {
@@ -49,13 +53,24 @@ export default function ContactSection({
   email,
   instagram,
   linkedin,
+  footer,
 }: ContactSectionProps) {
   const hasLinks = Boolean(email || instagram || linkedin || phone || address);
+
+  // Line one is the street; anything after it (the postcode) is mobile only.
+  const addressLines = (address?.trim() || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const street = addressLines[0] || "";
+  const postcode = addressLines.slice(1).join("\n");
 
   return (
     <section
       id="contact"
-      className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start mt-28 md:mt-20 md:justify-center px-4 py-16 md:scroll-mt-20 md:px-16 md:py-10 lg:px-24"
+      // Mobile: the links start a quarter of the way down the screen and the
+      // footer rides the bottom edge, so the page ends with it.
+      className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start px-4 pt-[25dvh] pb-12 md:mt-20 md:justify-center md:scroll-mt-20 md:px-16 md:py-10 lg:px-24"
     >
       {!hasLinks ? (
         <div className="min-h-[40vh]" aria-hidden />
@@ -84,10 +99,10 @@ export default function ContactSection({
               />
             </li>
           ) : null}
-          {address ? (
+          {street ? (
             <li>
               <a
-                href={mapsUrl(address)}
+                href={mapsUrl(address!)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${linkClass} whitespace-pre-line`}
@@ -95,7 +110,10 @@ export default function ContactSection({
                 <span className="opacity-0 transition-opacity group-hover:opacity-100">
                   (
                 </span>
-                {address.trim()}
+                {street}
+                {postcode ? (
+                  <span className="md:hidden">{`\n${postcode}`}</span>
+                ) : null}
                 <span className="opacity-0 transition-opacity group-hover:opacity-100">
                   )
                 </span>
@@ -104,6 +122,8 @@ export default function ContactSection({
           ) : null}
         </ul>
       )}
+
+      {footer}
     </section>
   );
 }
