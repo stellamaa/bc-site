@@ -278,7 +278,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
       {title || creditLine || description ? (
         <div className="mt-3 flex flex-col gap-0.5 md:mt-0.5 md:gap-0">
           {title ? (
-            <p className="text-sm font-medium uppercase leading-tight tracking-wide md:text-base md:leading-none">
+            <p className="font-medium text-sm uppercase leading-tight tracking-wide md:text-base md:leading-none">
               {title}
             </p>
           ) : null}
