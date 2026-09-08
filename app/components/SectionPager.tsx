@@ -18,15 +18,20 @@ function isSectionId(value: string): value is SectionId {
 
 type SectionPagerProps = {
   children: ReactNode;
+  /** Section to open on load when the URL has no hash (e.g. `/talent/<slug>`). */
+  initialSection?: SectionId;
 };
 
 /**
  * Desktop: one 100vh panel at a time, nav swaps panels (no page scroll).
  * Mobile: normal long-scroll document.
  */
-export default function SectionPager({ children }: SectionPagerProps) {
+export default function SectionPager({
+  children,
+  initialSection,
+}: SectionPagerProps) {
   const [isDesktop, setIsDesktop] = useState(false);
-  const [active, setActive] = useState<SectionId>("landing");
+  const [active, setActive] = useState<SectionId>(initialSection ?? "landing");
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -91,12 +96,12 @@ export default function SectionPager({ children }: SectionPagerProps) {
     if (isDesktop) return;
     const el = document.getElementById(active);
     if (!el) return;
-    // Only adjust if hash matches active (avoid fighting first paint)
+    // Only adjust if the URL asked for this section (avoid fighting first paint)
     const hash = window.location.hash.replace(/^#/, "");
-    if (hash === active) {
+    if (hash === active || (!hash && active === initialSection)) {
       el.scrollIntoView({ block: "start" });
     }
-  }, [isDesktop, active]);
+  }, [isDesktop, active, initialSection]);
 
   return (
     <div

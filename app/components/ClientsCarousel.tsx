@@ -6,6 +6,7 @@ import type { Logo } from "@/types/logo";
 
 type ClientsCarouselProps = {
   logos: Logo[];
+  className?: string;
 };
 
 /** Enough copies that the strip always spans wide screens without gaps. */
@@ -22,7 +23,10 @@ function shuffle<T>(list: T[]): T[] {
   return next;
 }
 
-export default function ClientsCarousel({ logos }: ClientsCarouselProps) {
+export default function ClientsCarousel({
+  logos,
+  className = "",
+}: ClientsCarouselProps) {
   const withImages = logos.filter((logo) => Boolean(logo.image));
   const [items, setItems] = useState(withImages);
 
@@ -40,7 +44,9 @@ export default function ClientsCarousel({ logos }: ClientsCarouselProps) {
   return (
     // Padding matches the header, so the strip lines up with the nav:
     // it starts at ABOUT US and ends at CONTACT.
-    <div className="mt-auto w-full shrink-0 px-4 py-4 md:px-16 md:py-5 lg:px-24">
+    <div
+      className={`w-full shrink-0 px-4 py-4 md:px-16 md:py-5 lg:px-24 ${className}`}
+    >
       <div className="clients-marquee relative overflow-hidden">
         <ul
           className="clients-marquee-track flex w-max items-center gap-12 md:gap-16"
@@ -50,7 +56,7 @@ export default function ClientsCarousel({ logos }: ClientsCarouselProps) {
           {loop.map((logo, index) => (
             <li
               key={`${logo._id}-${index}`}
-              className="relative h-8 w-24 shrink-0 md:h-10 md:w-32"
+              className="relative h-[1.6rem] w-[4.8rem] shrink-0 md:h-8 md:w-[6.4rem]"
               aria-hidden={index >= items.length}
             >
               <Image

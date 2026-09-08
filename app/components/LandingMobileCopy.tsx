@@ -11,8 +11,8 @@ type Props = {
 type Bounds = { marginLeft: number; maxWidth: number };
 
 /**
- * Mobile landing copy — spans from the end of ABOUT US to the start of CONTACT
- * in the header nav.
+ * Mobile landing copy — spans the full nav width, from where ABOUT US starts
+ * to where CONTACT ends in the header.
  */
 export default function LandingMobileCopy({ description }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -30,12 +30,12 @@ export default function LandingMobileCopy({ description }: Props) {
       if (!about || !contact || !track) return;
 
       const trackLeft = track.getBoundingClientRect().left;
-      const aboutRight = about.getBoundingClientRect().right;
-      const contactLeft = contact.getBoundingClientRect().left;
+      const aboutLeft = about.getBoundingClientRect().left;
+      const contactRight = contact.getBoundingClientRect().right;
 
       setBounds({
-        marginLeft: Math.max(0, Math.round(aboutRight - trackLeft)),
-        maxWidth: Math.max(0, Math.round(contactLeft - aboutRight)),
+        marginLeft: Math.max(0, Math.round(aboutLeft - trackLeft)),
+        maxWidth: Math.max(0, Math.round(contactRight - aboutLeft)),
       });
     };
 
@@ -67,7 +67,7 @@ export default function LandingMobileCopy({ description }: Props) {
       >
         <PortableText
           value={description}
-          className="text-center text-sm font-normal leading-relaxed text-black"
+          className="text-center text-sm font-normal leading-tight text-black"
         />
       </div>
     </div>

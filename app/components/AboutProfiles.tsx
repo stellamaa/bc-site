@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useAboutExpand } from "@/app/components/AboutExpand";
 import type { AboutProfile } from "@/types/about";
 
 const bioClass =
@@ -11,20 +12,10 @@ type AboutProfilesProps = {
   profiles: AboutProfile[];
 };
 
-function ProfileBio({
-  bio,
-  profileKey,
-  expandedKey,
-  onToggle,
-}: {
-  bio: string;
-  profileKey: string;
-  expandedKey: string | null;
-  onToggle: (key: string) => void;
-}) {
+function ProfileBio({ bio, profileKey }: { bio: string; profileKey: string }) {
   const textRef = useRef<HTMLParagraphElement>(null);
   const [canToggle, setCanToggle] = useState(false);
-  const isExpanded = expandedKey === profileKey;
+  const { expanded: isExpanded, toggle } = useAboutExpand(profileKey);
 
   useEffect(() => {
     const el = textRef.current;
@@ -51,7 +42,7 @@ function ProfileBio({
       {canToggle || isExpanded ? (
         <button
           type="button"
-          onClick={() => onToggle(profileKey)}
+          onClick={toggle}
           className="mt-1 text-xs font-medium md:text-[0.8rem] lg:text-sm"
         >
           {isExpanded ? "Read less" : "Read more"}
@@ -62,8 +53,6 @@ function ProfileBio({
 }
 
 export default function AboutProfiles({ profiles }: AboutProfilesProps) {
-  const [expandedKey, setExpandedKey] = useState<string | null>(null);
-
   return (
     <div className="flex flex-col gap-6 md:gap-3">
       {profiles.map((profile) => {
@@ -90,14 +79,7 @@ export default function AboutProfiles({ profiles }: AboutProfilesProps) {
                 <div className="mt-0.5 h-24 w-24 shrink-0 bg-neutral-100 md:h-24 md:w-24 lg:h-28 lg:w-28" />
               )}
               {bio ? (
-                <ProfileBio
-                  bio={bio}
-                  profileKey={profile._key}
-                  expandedKey={expandedKey}
-                  onToggle={(key) =>
-                    setExpandedKey((prev) => (prev === key ? null : key))
-                  }
-                />
+                <ProfileBio bio={bio} profileKey={profile._key} />
               ) : null}
             </div>
             {profile.name ? (

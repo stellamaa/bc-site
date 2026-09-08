@@ -7,7 +7,8 @@ import {
   SECTION_IDS,
   type SectionId,
 } from "@/app/components/SectionPager";
-import { replaceDocumentUrl } from "@/lib/documentUrl";
+import { replaceAppPath } from "@/lib/documentUrl";
+import { slugFromPathname } from "@/lib/sharePaths";
 
 const navItems = [
   { href: "/#about", label: "ABOUT US", section: "about" as const },
@@ -31,6 +32,11 @@ export default function Header({ className = "" }: HeaderProps) {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<SectionId | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  // `/talent/<slug>` and `/work/<slug>` render the homepage on their section
+  const talentSlug = pathname ? slugFromPathname(pathname, "talent") : null;
+  const workSlug = pathname ? slugFromPathname(pathname, "work") : null;
+  const onHomeDocument =
+    pathname === "/" || talentSlug !== null || workSlug !== null;
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -41,7 +47,7 @@ export default function Header({ className = "" }: HeaderProps) {
   }, []);
 
   useEffect(() => {
-    if (pathname !== "/") {
+    if (!onHomeDocument) {
       setActiveSection(null);
       return;
     }
@@ -49,6 +55,10 @@ export default function Header({ className = "" }: HeaderProps) {
     const hash = window.location.hash.replace(/^#/, "");
     if ((SECTION_IDS as readonly string[]).includes(hash)) {
       setActiveSection(hash as SectionId);
+    } else if (talentSlug) {
+      setActiveSection("talent");
+    } else if (workSlug) {
+      setActiveSection("work");
     } else {
       setActiveSection(isDesktop ? "landing" : "work");
     }
@@ -90,15 +100,16 @@ export default function Header({ className = "" }: HeaderProps) {
       window.removeEventListener("scroll", updateActive);
       window.removeEventListener("resize", updateActive);
     };
-  }, [pathname, isDesktop]);
+  }, [onHomeDocument, talentSlug, workSlug, isDesktop]);
 
   const onSectionClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, section: SectionId) => {
-      if (pathname !== "/") {
+      if (!onHomeDocument) {
         return;
       }
       e.preventDefault();
-      replaceDocumentUrl("", section);
+      // Back to `/` — a work/talent path in the address bar shouldn't stick.
+      replaceAppPath("/", "", section);
       setActiveSection(section);
       window.dispatchEvent(
         new CustomEvent("bc:section", { detail: { section } }),
@@ -108,14 +119,14 @@ export default function Header({ className = "" }: HeaderProps) {
         scrollToId(section);
       }
     },
-    [pathname],
+    [onHomeDocument],
   );
 
   if (pathname?.startsWith("/admin")) return null;
 
   const isActive = (item: (typeof navItems)[number]) => {
     if ("isLogo" in item && item.isLogo) return false;
-    if (pathname === "/") {
+    if (onHomeDocument) {
       return item.section === activeSection;
     }
     return false;

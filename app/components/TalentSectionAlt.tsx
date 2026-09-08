@@ -5,9 +5,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
-import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
+import { pushAppPath, replaceAppPath } from "@/lib/documentUrl";
 import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
 import { talentPath, workPath } from "@/lib/sharePaths";
+import {
+  TALENT_SELECT_EVENT,
+  type TalentSelectDetail,
+} from "@/lib/talentNav";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import {
   getTalentLayoutFromEnv,
@@ -22,6 +26,8 @@ type Props = {
   works: Work[];
   /** Server-resolved env default */
   defaultLayout?: TalentLayoutMode;
+  /** Talent highlighted on load, from a `/talent/<slug>` URL. */
+  initialSlug?: string;
 };
 
 function formatIndex(index: number) {
@@ -55,6 +61,7 @@ export default function TalentSectionAlt({
   talents,
   works,
   defaultLayout = "default",
+  initialSlug,
 }: Props) {
   const searchParams = useSearchParams();
   const layout =
@@ -65,7 +72,9 @@ export default function TalentSectionAlt({
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   // Closed by default — otherwise the fixed overlay blocks the whole homepage
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(
+    initialSlug ?? null,
+  );
   const [bioExpanded, setBioExpanded] = useState(false);
   const [openWorkId, setOpenWorkId] = useState<string | null>(null);
   const expandRef = useRef<HTMLDivElement>(null);
@@ -75,7 +84,7 @@ export default function TalentSectionAlt({
   const dismissMenuWithoutSelection = () => {
     closeMenu();
     if (selectedSlug) return;
-    replaceDocumentUrl("", "landing");
+    replaceAppPath("/", "", "landing");
     document
       .getElementById("landing")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -104,10 +113,10 @@ export default function TalentSectionAlt({
       setOpenWorkId(null);
     };
 
-    // Fresh load / remount: never restore a selected talent
-    if (window.location.hash !== "#talent") {
+    // Fresh load / remount: only a /talent/<slug> URL restores a selection
+    if (!initialSlug && window.location.hash !== "#talent") {
       clearSelection();
-    } else if (shouldHandle()) {
+    } else if (!initialSlug && shouldHandle()) {
       setMenuOpen(true);
     }
 
@@ -122,9 +131,22 @@ export default function TalentSectionAlt({
       // BC, Work, About, Contact — deselect talent and hide profile
       clearSelection();
     };
+    // A work credit elsewhere on the page asking for this talent
+    const onTalent = (event: Event) => {
+      const slug = (event as CustomEvent<TalentSelectDetail>).detail?.slug;
+      if (!slug) return;
+      setMenuOpen(false);
+      setOpenWorkId(null);
+      setBioExpanded(false);
+      setSelectedSlug(slug);
+    };
     window.addEventListener("bc:section", onSection);
-    return () => window.removeEventListener("bc:section", onSection);
-  }, [forceOverlayUi]);
+    window.addEventListener(TALENT_SELECT_EVENT, onTalent);
+    return () => {
+      window.removeEventListener("bc:section", onSection);
+      window.removeEventListener(TALENT_SELECT_EVENT, onTalent);
+    };
+  }, [forceOverlayUi, initialSlug]);
 
   useEffect(() => {
     setBioExpanded(false);
@@ -190,7 +212,9 @@ export default function TalentSectionAlt({
 
   // Flag off / desktop (without force) / SSR → original component
   if (!useOverlayUi) {
-    return <TalentSection talents={talents} works={works} />;
+    return (
+      <TalentSection talents={talents} works={works} initialSlug={initialSlug} />
+    );
   }
 
   return (
@@ -361,7 +385,7 @@ export default function TalentSectionAlt({
                                   work.thumbnailAlt || work.title || "Work"
                                 }
                                 fill
-                                className="object-cover"
+                                className="object-cover object-top"
                                 sizes="40vw"
                               />
                             ) : null}

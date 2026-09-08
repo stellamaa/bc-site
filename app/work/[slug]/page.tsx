@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import WorkDetailClient from "@/app/work/[slug]/WorkDetailClient";
+import HomeContent from "@/app/HomeContent";
 import { getWorkBySlug, getWorks } from "@/sanity/sanity-utils";
 
 type PageProps = {
@@ -35,14 +35,11 @@ export async function generateMetadata({
   }
 }
 
+/** Shareable work URL — same page as `/`, opened on the expanded project. */
 export default async function WorkPage({ params }: PageProps) {
   const { slug } = await params;
   const work = await getWorkBySlug(slug).catch(() => null);
   if (!work) notFound();
 
-  return (
-    <main className="flex flex-col bg-white text-black">
-      <WorkDetailClient work={work} />
-    </main>
-  );
+  return <HomeContent workSlug={slug} />;
 }

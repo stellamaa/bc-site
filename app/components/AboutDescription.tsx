@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useAboutExpand } from "@/app/components/AboutExpand";
 
 type AboutDescriptionProps = {
   description: string;
@@ -26,7 +27,7 @@ export default function AboutDescription({
   description,
   className = "",
 }: AboutDescriptionProps) {
-  const [expanded, setExpanded] = useState(false);
+  const { expanded, toggle } = useAboutExpand("description");
   const paragraphs = useMemo(
     () => splitParagraphs(description),
     [description],
@@ -45,7 +46,7 @@ export default function AboutDescription({
       {hasMore ? (
         <button
           type="button"
-          onClick={() => setExpanded((open) => !open)}
+          onClick={toggle}
           className="mt-1 font-medium"
         >
           {expanded ? "Read less" : "Read more"}

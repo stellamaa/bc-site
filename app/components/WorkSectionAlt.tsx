@@ -3,14 +3,16 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import WorkCredits from "@/app/components/WorkCredits";
 import WorkExpand from "@/app/components/WorkExpand";
 import WorkSection from "@/app/components/WorkSection";
-import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
-import { shuffleArray } from "@/lib/order";
 import {
-  getCategorySlugsFromLocation,
-  getWorkCreditLine,
-} from "@/lib/workCredits";
+  pushAppPath,
+  replaceAppPath,
+  replaceDocumentUrl,
+} from "@/lib/documentUrl";
+import { shuffleArray } from "@/lib/order";
+import { getCategorySlugsFromLocation } from "@/lib/workCredits";
 import { workPath } from "@/lib/sharePaths";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
@@ -21,6 +23,8 @@ type Props = {
   works: Work[];
   /** When true, use overlay mobile UI (experiment). Desktop always uses original. */
   enabled?: boolean;
+  /** Project expanded on load, from a `/work/<slug>` URL. */
+  initialSlug?: string;
 };
 
 function formatIndex(index: number) {
@@ -51,6 +55,7 @@ export default function WorkSectionAlt({
   categories,
   works,
   enabled = true,
+  initialSlug,
 }: Props) {
   const searchParams = useSearchParams();
   const forceOverlayUi = searchParams.get("workOverlay") === "1";
@@ -65,12 +70,27 @@ export default function WorkSectionAlt({
   const categoryParams = searchParams.getAll("category");
   const categoryKey = categoryParams.join(",");
 
+  const initialWork = useMemo(
+    () => (initialSlug ? works.find((w) => w.slug === initialSlug) ?? null : null),
+    [works, initialSlug],
+  );
+  /** A deep link has no filter yet — fall back to the work's own categories. */
+  const initialCategorySlugs = useMemo(
+    () =>
+      (initialWork?.categories ?? [])
+        .map((category) => category.slug)
+        .filter((slug): slug is string => Boolean(slug)),
+    [initialWork],
+  );
+
   const [appliedSlugs, setAppliedSlugs] = useState<string[]>(() =>
-    categoryParams.length > 0 ? categoryParams : [],
+    categoryParams.length > 0 ? categoryParams : initialCategorySlugs,
   );
   const [draftSlugs, setDraftSlugs] = useState<string[]>(appliedSlugs);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openWorkId, setOpenWorkId] = useState<string | null>(null);
+  const [openWorkId, setOpenWorkId] = useState<string | null>(
+    initialWork?._id ?? null,
+  );
   const expandRef = useRef<HTMLDivElement>(null);
 
   const isOverlayViewport = () =>
@@ -99,6 +119,17 @@ export default function WorkSectionAlt({
       return;
     }
 
+    if (initialCategorySlugs.length > 0) {
+      setAppliedSlugs(initialCategorySlugs);
+      setDraftSlugs(initialCategorySlugs);
+      const params = new URLSearchParams(searchParams.toString());
+      if (!params.getAll("category").length) {
+        for (const slug of initialCategorySlugs) params.append("category", slug);
+        replaceDocumentUrl(params.toString());
+      }
+      return;
+    }
+
     if (!creativeSlug) {
       setAppliedSlugs([]);
       setDraftSlugs([]);
@@ -115,6 +146,7 @@ export default function WorkSectionAlt({
   }, [
     categoryKey,
     creativeSlug,
+    initialCategorySlugs,
     searchParams,
     useOverlayUi,
   ]);
@@ -129,9 +161,15 @@ export default function WorkSectionAlt({
         setDraftSlugs(next);
         return;
       }
-      if (creativeSlug) {
-        setAppliedSlugs([creativeSlug]);
-        setDraftSlugs([creativeSlug]);
+      const fallback =
+        initialCategorySlugs.length > 0
+          ? initialCategorySlugs
+          : creativeSlug
+            ? [creativeSlug]
+            : [];
+      if (fallback.length > 0) {
+        setAppliedSlugs(fallback);
+        setDraftSlugs(fallback);
       }
     };
     window.addEventListener("bc:location", syncFromLocation);
@@ -140,7 +178,7 @@ export default function WorkSectionAlt({
       window.removeEventListener("bc:location", syncFromLocation);
       window.removeEventListener("popstate", syncFromLocation);
     };
-  }, [creativeSlug, useOverlayUi]);
+  }, [creativeSlug, initialCategorySlugs, useOverlayUi]);
 
   const resetWorks = useCallback(() => {
     // Mobile: restore Creative Directors. Desktop: clear to inactive/empty.
@@ -154,8 +192,8 @@ export default function WorkSectionAlt({
     params.delete("category");
     for (const slug of defaults) params.append("category", slug);
     const query = params.toString();
-    // Stay on landing hash when resetting from BC
-    replaceDocumentUrl(query);
+    // Back to the landing document — an open work's `/work/<slug>` must not stick
+    replaceAppPath("/", query, "landing");
   }, [creativeSlug, forceOverlayUi, searchParams]);
 
   useEffect(() => {
@@ -266,7 +304,13 @@ export default function WorkSectionAlt({
   }, [openWork?._id]);
 
   if (!useOverlayUi) {
-    return <WorkSection categories={categories} works={works} />;
+    return (
+      <WorkSection
+        categories={categories}
+        works={works}
+        initialSlug={initialSlug}
+      />
+    );
   }
 
   return (
@@ -279,10 +323,10 @@ export default function WorkSectionAlt({
           className="fixed inset-0 z-[60] flex flex-col bg-white pt-12 pb-8"
           role="dialog"
           aria-modal="true"
-          aria-label="Categories"
+          aria-label="Category filters"
         >
           <p className="px-4 py-3 text-center text-[10px] font-medium tracking-[0.12em] uppercase text-neutral-400">
-            Categories
+            Category filters
           </p>
           <ul className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-6 py-4">
             {categories.map((category) => {
@@ -335,12 +379,7 @@ export default function WorkSectionAlt({
             work={openWork}
             onClose={() => {
               setOpenWorkId(null);
-              replaceDocumentUrl(
-                typeof window !== "undefined"
-                  ? window.location.search.replace(/^\?/, "")
-                  : "",
-                "work",
-              );
+              replaceAppPath("/", undefined, "work");
             }}
           />
         </div>
@@ -355,7 +394,6 @@ export default function WorkSectionAlt({
               const n = formatIndex(index);
               const isOpen = openWorkId === work._id;
               const overlayLabel = getWorkOverlayLabel(work);
-              const creditLine = getWorkCreditLine(work);
 
               return (
                 <li key={work._id} className="min-w-0">
@@ -365,12 +403,7 @@ export default function WorkSectionAlt({
                       setOpenWorkId((prev) => {
                         const next = prev === work._id ? null : work._id;
                         if (!next) {
-                          replaceDocumentUrl(
-                            typeof window !== "undefined"
-                              ? window.location.search.replace(/^\?/, "")
-                              : "",
-                            "work",
-                          );
+                          replaceAppPath("/", undefined, "work");
                           return null;
                         }
                         if (work.slug) pushAppPath(workPath(work.slug));
@@ -389,8 +422,7 @@ export default function WorkSectionAlt({
                           src={work.thumbnail}
                           alt={work.thumbnailAlt || work.title || "Work"}
                           fill
-                          className="object-cover object-center"
-                          style={{ objectFit: "cover" }}
+                          className="object-cover object-top"
                           sizes="50vw"
                           loading={index < 4 ? "eager" : "lazy"}
                           priority={index < 4}
@@ -407,12 +439,11 @@ export default function WorkSectionAlt({
                         {work.title}
                       </p>
                     ) : null}
-                    {creditLine ? (
-                      <p className="-mt-1.5 line-clamp-2 pt-0 text-[10px] font-normal leading-snug text-neutral-500">
-                        {creditLine}
-                      </p>
-                    ) : null}
                   </button>
+                  <WorkCredits
+                    work={work}
+                    className="mt-0.5 line-clamp-2 text-[10px] font-normal leading-snug text-neutral-500"
+                  />
                 </li>
               );
             })}

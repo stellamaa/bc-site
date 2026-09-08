@@ -18,7 +18,7 @@ export default function LandingHero({
   return (
     <div className="hidden md:flex flex-1 flex-col items-center justify-center px-8 min-h-0">
       {categories.length > 0 ? (
-        <ul className="flex flex-col items-center gap-1 text-center md:gap-5">
+        <ul className="flex flex-col items-center gap-1 text-center md:gap-[clamp(0.25rem,1.4vh,1.25rem)]">
           {categories.map((category) => (
             <li key={category._id}>
               <Link
@@ -27,7 +27,9 @@ export default function LandingHero({
                     ? `/?category=${category.slug}#work`
                     : "/#work"
                 }
-                className="group text-3xl md:text-7xl lg:text-8xl xl:text-8xl font-medium uppercase tracking-tight text-neutral-400 transition-colors hover:text-black"
+                // Scales with the shorter of viewport height/width so the
+                // links, copy and logo strip all fit on smaller laptops.
+                className="group text-3xl md:text-[clamp(2.5rem,min(9.5vh,9.5vw),6rem)] md:leading-[1.05] font-medium uppercase tracking-tight text-neutral-400 transition-colors hover:text-black"
                 onClick={(e) => {
                   if (!category.slug) return;
                   e.preventDefault();
@@ -70,7 +72,7 @@ export default function LandingHero({
       {description && description.length > 0 ? (
         <PortableText
           value={description}
-          className="mt-8 md:w-2/3 lg:mt-10 lg:w-1/2 text-center text-sm md:text-lg font-normal leading-[1.1] text-black [&_p]:leading-[inherit] [&_p]:mb-2"
+          className="mt-8 md:mt-[clamp(1rem,3vh,2.5rem)] md:w-2/3 lg:w-1/2 text-center text-sm md:text-[clamp(0.875rem,1.9vh,1.125rem)] font-normal leading-[1.1] text-black [&_p]:leading-[inherit] [&_p]:mb-2"
         />
       ) : null}
     </div>

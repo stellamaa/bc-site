@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import TalentDetailClient from "@/app/talent/[slug]/TalentDetailClient";
-import {
-  getTalentBySlug,
-  getTalents,
-  getWorks,
-} from "@/sanity/sanity-utils";
+import HomeContent from "@/app/HomeContent";
+import { getTalentBySlug, getTalents } from "@/sanity/sanity-utils";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -39,17 +35,11 @@ export async function generateMetadata({
   }
 }
 
+/** Shareable talent URL — same page as `/`, opened on the Talent section. */
 export default async function TalentPage({ params }: PageProps) {
   const { slug } = await params;
-  const [talent, works] = await Promise.all([
-    getTalentBySlug(slug).catch(() => null),
-    getWorks().catch(() => [] as Awaited<ReturnType<typeof getWorks>>),
-  ]);
+  const talent = await getTalentBySlug(slug).catch(() => null);
   if (!talent) notFound();
 
-  return (
-    <main className="flex flex-col bg-white text-black">
-      <TalentDetailClient talent={talent} works={works} />
-    </main>
-  );
+  return <HomeContent talentSlug={slug} />;
 }

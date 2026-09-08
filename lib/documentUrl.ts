@@ -42,6 +42,10 @@ function safeHistoryWrite(
   queueMicrotask(write);
 }
 
+function currentSearch() {
+  return typeof window === "undefined" ? "" : window.location.search;
+}
+
 function withSearchHash(path: string, search = "", hash = "") {
   const q = search
     ? search.startsWith("?")
@@ -60,17 +64,22 @@ export function pushDocumentUrl(search: string, hash = "") {
   safeHistoryWrite("pushState", documentUrl(search, hash));
 }
 
-/** Address bar → app path (e.g. `/work/slug`) without a full navigation. */
-export function pushAppPath(path: string, search = "", hash = "") {
+/**
+ * Address bar → app path (e.g. `/work/slug`) without a full navigation.
+ *
+ * `search` defaults to the current query so filters (e.g. `?category=`) survive;
+ * pass `""` to clear it.
+ */
+export function pushAppPath(path: string, search?: string, hash = "") {
   safeHistoryWrite(
     "pushState",
-    withSearchHash(absoluteAppPath(path), search, hash),
+    withSearchHash(absoluteAppPath(path), search ?? currentSearch(), hash),
   );
 }
 
-export function replaceAppPath(path: string, search = "", hash = "") {
+export function replaceAppPath(path: string, search?: string, hash = "") {
   safeHistoryWrite(
     "replaceState",
-    withSearchHash(absoluteAppPath(path), search, hash),
+    withSearchHash(absoluteAppPath(path), search ?? currentSearch(), hash),
   );
 }

@@ -4,9 +4,14 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
-import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
+import { pushAppPath, replaceAppPath } from "@/lib/documentUrl";
 import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
 import { talentPath, workPath } from "@/lib/sharePaths";
+import {
+  TALENT_SELECT_EVENT,
+  type TalentSelectDetail,
+} from "@/lib/talentNav";
+import { useWheelScrollX } from "@/lib/useWheelScrollX";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Talent } from "@/types/talent";
 import type { Work } from "@/types/work";
@@ -14,6 +19,8 @@ import type { Work } from "@/types/work";
 type TalentSectionProps = {
   talents: Talent[];
   works: Work[];
+  /** Talent highlighted on load, from a `/talent/<slug>` URL. */
+  initialSlug?: string;
 };
 
 function formatIndex(index: number) {
@@ -28,13 +35,20 @@ function chunkItems<T>(items: T[], size: number): T[][] {
   return pages;
 }
 
-export default function TalentSection({ talents, works }: TalentSectionProps) {
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+export default function TalentSection({
+  talents,
+  works,
+  initialSlug,
+}: TalentSectionProps) {
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(
+    initialSlug ?? null,
+  );
   const [bioExpanded, setBioExpanded] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isXlDesktop, setIsXlDesktop] = useState(false);
   const [openWorkId, setOpenWorkId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const namesListRef = useRef<HTMLUListElement>(null);
   const worksAnchorRef = useRef<HTMLDivElement>(null);
   const expandAnchorRef = useRef<HTMLDivElement>(null);
@@ -141,7 +155,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
       setBioExpanded(false);
     };
 
-    if (window.location.hash !== "#talent") {
+    if (!initialSlug && window.location.hash !== "#talent") {
       clearSelection();
     }
 
@@ -152,9 +166,21 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
         clearSelection();
       }
     };
+    // A work credit elsewhere on the page asking for this talent
+    const onTalent = (event: Event) => {
+      const slug = (event as CustomEvent<TalentSelectDetail>).detail?.slug;
+      if (!slug) return;
+      setOpenWorkId(null);
+      setBioExpanded(false);
+      setSelectedSlug(slug);
+    };
     window.addEventListener("bc:section", onSection);
-    return () => window.removeEventListener("bc:section", onSection);
-  }, []);
+    window.addEventListener(TALENT_SELECT_EVENT, onTalent);
+    return () => {
+      window.removeEventListener("bc:section", onSection);
+      window.removeEventListener(TALENT_SELECT_EVENT, onTalent);
+    };
+  }, [initialSlug]);
 
   useEffect(() => {
     if (openWorkId && !talentWorks.some((work) => work._id === openWorkId)) {
@@ -182,7 +208,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
     if (selectedSlug) {
       pushAppPath(talentPath(selectedSlug));
     } else {
-      replaceDocumentUrl("", "talent");
+      replaceAppPath("/", undefined, "talent");
     }
   }, [selectedSlug]);
 
@@ -191,7 +217,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
       const next = prev === workId ? null : workId;
       if (!next) {
         if (selectedSlug) pushAppPath(talentPath(selectedSlug));
-        else replaceDocumentUrl("", "talent");
+        else replaceAppPath("/", undefined, "talent");
         return null;
       }
       const work = talentWorks.find((item) => item._id === workId);
@@ -210,6 +236,13 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
     ? [talentWorks]
     : chunkItems(talentWorks, pageSize);
   const showScrollTrack = stripLayout && talentWorks.length > 5;
+
+  // Wheel anywhere in the section scrolls this talent's works sideways
+  useWheelScrollX({
+    areaRef: sectionRef,
+    scrollRef,
+    enabled: stripLayout && talentWorks.length > 0,
+  });
 
   useEffect(() => {
     if (!stripLayout || !openWorkId) return;
@@ -235,6 +268,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
   return (
     <section
       id="talent"
+      ref={sectionRef}
       className="min-h-dvh scroll-mt-12 px-3 pt-3 pb-16 md:scroll-mt-20 md:px-6 md:pt-6 md:pr-6 md:pb-10 md:pl-10 lg:px-8 lg:pt-8 lg:pr-8 lg:pb-16 lg:pl-16 xl:pb-24 xl:pl-24"
     >
       <div className="flex items-start gap-4 md:grid md:grid-cols-[12rem_minmax(0,1fr)] md:items-start md:gap-x-8 md:gap-y-4 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-16 lg:gap-y-5 xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-x-24">
@@ -284,7 +318,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                           if (next) {
                             pushAppPath(talentPath(next));
                           } else {
-                            replaceDocumentUrl("", "talent");
+                            replaceAppPath("/", undefined, "talent");
                           }
                           return next;
                         })
@@ -385,7 +419,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                                         "Work"
                                       }
                                       fill
-                                      className="object-cover"
+                                      className="object-cover object-top"
                                       sizes="160px"
                                     />
                                   ) : null}
@@ -556,7 +590,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                                             "Work"
                                           }
                                           fill
-                                          className="object-cover"
+                                          className="object-cover object-top"
                                           sizes="160px"
                                         />
                                       ) : null}
@@ -610,7 +644,7 @@ export default function TalentSection({ talents, works }: TalentSectionProps) {
                                               "Work"
                                             }
                                             fill
-                                            className="object-cover"
+                                            className="object-cover object-top"
                                             sizes="40vw"
                                           />
                                         ) : null}

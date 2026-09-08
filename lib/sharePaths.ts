@@ -33,6 +33,17 @@ export function talentPath(slug: string): string {
   return `/talent/${encodeURIComponent(slug)}`;
 }
 
+/** `/work/<slug>` or `/talent/<slug>` (with basePath / trailing slash) → slug. */
+export function slugFromPathname(
+  pathname: string,
+  root: "work" | "talent",
+): string | null {
+  const parts = pathname.split("/").filter(Boolean);
+  const index = parts.lastIndexOf(root);
+  if (index === -1 || index === parts.length - 1) return null;
+  return decodeURIComponent(parts[index + 1]!);
+}
+
 /** Full browser path including optional basePath + trailing slash. */
 export function absoluteAppPath(path: string): string {
   const clean = path.startsWith("/") ? path : `/${path}`;

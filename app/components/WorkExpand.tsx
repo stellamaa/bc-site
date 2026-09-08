@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import WorkCredits from "@/app/components/WorkCredits";
 import {
   getGalleryImages,
   getGalleryVideos,
@@ -120,7 +121,11 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
 
   return (
     <div className="work-expand mb-2 animate-[workExpandIn_320ms_ease-out] md:mb-0 md:ml-12">
-      <div className="group relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[46rem] lg:w-[82%] lg:max-w-[62rem]">
+      {/*
+        On short windows the media is capped by height (16:9 kept via max-width)
+        so the whole expand still fits under the nav without scrolling.
+      */}
+      <div className="group relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[min(46rem,calc(96dvh_-_10px))] lg:w-[82%] lg:max-w-[min(62rem,calc(96dvh_-_10px))]">
         {isVideoPlayer && video ? (
           <>
             {video.kind === "youtube" && playing ? (
@@ -282,13 +287,12 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               {title}
             </p>
           ) : null}
-          {creditLine ? (
-            <p className=" font-normal text-xs leading-tight text-neutral-500 md:text-sm md:leading-none">
-              {creditLine}
-            </p>
-          ) : null}
+          <WorkCredits
+            work={work}
+            className=" font-normal text-xs leading-tight text-neutral-500 md:text-sm md:leading-none"
+          />
           {description ? (
-            <p className="max-w-2xl text-sm font-normal leading-snug whitespace-pre-line md:mt-0.5 md:w-[48%] md:max-w-[46rem] md:text-left md:leading-tight md:line-clamp-4 md:text-sm lg:w-[82%] lg:max-w-[62rem]">
+            <p className="max-w-2xl text-sm font-normal leading-snug whitespace-pre-line md:mt-0.5 md:w-[48%] md:max-w-[min(46rem,calc(96dvh_-_10px))] md:text-left md:leading-tight md:line-clamp-4 md:text-sm lg:w-[82%] lg:max-w-[min(62rem,calc(96dvh_-_10px))]">
               {description}
             </p>
           ) : null}

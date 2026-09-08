@@ -4,14 +4,17 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ScrollTrack from "@/app/components/ScrollTrack";
+import WorkCredits from "@/app/components/WorkCredits";
 import WorkExpand from "@/app/components/WorkExpand";
-import { pushAppPath, replaceDocumentUrl } from "@/lib/documentUrl";
+import {
+  pushAppPath,
+  replaceAppPath,
+  replaceDocumentUrl,
+} from "@/lib/documentUrl";
 import { workPath } from "@/lib/sharePaths";
 import { shuffleArray } from "@/lib/order";
-import {
-  getCategorySlugsFromLocation,
-  getWorkCreditLine,
-} from "@/lib/workCredits";
+import { getCategorySlugsFromLocation } from "@/lib/workCredits";
+import { useWheelScrollX } from "@/lib/useWheelScrollX";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Category } from "@/types/category";
 import type { Work } from "@/types/work";
@@ -19,6 +22,8 @@ import type { Work } from "@/types/work";
 type WorkSectionProps = {
   categories: Category[];
   works: Work[];
+  /** Project expanded on load, from a `/work/<slug>` URL. */
+  initialSlug?: string;
 };
 
 function formatIndex(index: number) {
@@ -33,22 +38,53 @@ function chunkWorks<T>(items: T[], size: number): T[][] {
   return pages;
 }
 
-export default function WorkSection({ categories, works }: WorkSectionProps) {
+export default function WorkSection({
+  categories,
+  works,
+  initialSlug,
+}: WorkSectionProps) {
   const searchParams = useSearchParams();
   const categoryParams = searchParams.getAll("category");
   const categoryKey = categoryParams.join(",");
 
-  const [selectedSlugs, setSelectedSlugs] = useState<string[]>(
-    () => categoryParams,
+  const initialWork = useMemo(
+    () => (initialSlug ? works.find((w) => w.slug === initialSlug) ?? null : null),
+    [works, initialSlug],
+  );
+  /** A deep link has no filter yet — fall back to the work's own categories. */
+  const initialCategorySlugs = useMemo(
+    () =>
+      (initialWork?.categories ?? [])
+        .map((category) => category.slug)
+        .filter((slug): slug is string => Boolean(slug)),
+    [initialWork],
+  );
+
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>(() =>
+    categoryParams.length > 0 ? categoryParams : initialCategorySlugs,
   );
   const [isDesktop, setIsDesktop] = useState(false);
-  const [openWorkId, setOpenWorkId] = useState<string | null>(null);
+  const [openWorkId, setOpenWorkId] = useState<string | null>(
+    initialWork?._id ?? null,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const expandAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setSelectedSlugs(categoryKey ? categoryKey.split(",") : []);
-  }, [categoryKey]);
+    setSelectedSlugs(
+      categoryKey ? categoryKey.split(",") : initialCategorySlugs,
+    );
+  }, [categoryKey, initialCategorySlugs]);
+
+  // Put the deep link's categories in the URL so filter syncing agrees with it
+  useEffect(() => {
+    if (initialCategorySlugs.length === 0) return;
+    if (getCategorySlugsFromLocation().length > 0) return;
+    const params = new URLSearchParams();
+    for (const slug of initialCategorySlugs) params.append("category", slug);
+    replaceDocumentUrl(params.toString());
+  }, [initialCategorySlugs]);
 
   // Landing hero (and filter toggles) use history push/replaceState — sync
   // selected filters from the live URL when Next searchParams stay stale.
@@ -139,24 +175,14 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
 
   const closeWork = useCallback(() => {
     setOpenWorkId(null);
-    replaceDocumentUrl(
-      typeof window !== "undefined"
-        ? window.location.search.replace(/^\?/, "")
-        : "",
-      "work",
-    );
+    replaceAppPath("/", undefined, "work");
   }, []);
 
   const selectWork = (workId: string) => {
     setOpenWorkId((prev) => {
       const next = prev === workId ? null : workId;
       if (!next) {
-        replaceDocumentUrl(
-          typeof window !== "undefined"
-            ? window.location.search.replace(/^\?/, "")
-            : "",
-          "work",
-        );
+        replaceAppPath("/", undefined, "work");
         return null;
       }
       const work = displayWorks.find((item) => item._id === workId);
@@ -174,7 +200,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
         ?.section;
       if (section === "landing") {
         setOpenWorkId(null);
-        replaceDocumentUrl("", "landing");
+        replaceAppPath("/", "", "landing");
       }
     };
     window.addEventListener("bc:section", onSection);
@@ -195,6 +221,14 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
     ? chunkWorks(displayWorks, 6)
     : [displayWorks];
 
+  // Wheel anywhere in the section scrolls the projects sideways
+  useWheelScrollX({
+    areaRef: sectionRef,
+    scrollRef,
+    enabled: isDesktop && horizontalScroll,
+    paged: desktopPageScroll,
+  });
+
   useEffect(() => {
     if (!stripLayout || !openWorkId) return;
     const root = scrollRef.current;
@@ -212,7 +246,10 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
   return (
     <section
       id="work"
-      className="min-h-dvh scroll-mt-12 px-4 pt-4 pb-16 md:scroll-mt-20 md:pt-10 md:pr-8 md:pb-10 md:pl-12 lg:pt-14 lg:pb-16 lg:pl-16 xl:pt-18 xl:pb-24 xl:pl-24"
+      ref={sectionRef}
+      // --work-pt: top padding that tightens on short windows. The expand and
+      // the filter column cancel it with a matching negative margin.
+      className="min-h-dvh scroll-mt-12 px-4 pt-4 pb-16 [--work-pt:clamp(1.25rem,calc(14dvh_-_48px),4.5rem)] md:scroll-mt-20 md:pt-[var(--work-pt)] md:pr-8 md:pb-10 md:pl-12 lg:pb-16 lg:pl-16 xl:pb-24 xl:pl-24"
     >
       {/*
         Mobile: expand spans full width above filters + grid.
@@ -222,7 +259,8 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
         {openWork ? (
           <div
             ref={expandAnchorRef}
-            className="col-span-2 row-start-1 scroll-mt-12 md:col-span-1 md:col-start-2 md:-mt-10 md:scroll-mt-20 lg:-mt-14"
+            // Cancels the section's top padding so the expand sits under the nav
+            className="col-span-2 row-start-1 scroll-mt-12 md:col-span-1 md:col-start-2 md:mt-[calc(var(--work-pt)*-1)] md:scroll-mt-20"
           >
             <WorkExpand work={openWork} onClose={closeWork} />
           </div>
@@ -233,12 +271,12 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
         <aside
           className={`col-start-1 flex w-auto max-w-[9rem] shrink-0 flex-col items-center md:w-56 md:max-w-none ${
             openWork
-              ? "row-start-2 md:row-start-1 md:row-span-2 md:-mt-10 lg:-mt-14"
+              ? "row-start-2 md:row-start-1 md:row-span-2 md:mt-[calc(var(--work-pt)*-1)]"
               : "row-start-1"
           }`}
         >
           <p className="mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:text-xs">
-            Categories
+            Category filters
           </p>
           <ul className="flex w-max max-w-full flex-col gap-3 md:w-full md:gap-4">
             {categories.map((category) => {
@@ -291,27 +329,28 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                 }
               >
                 {stripLayout ? (
-                  <ul className="flex w-max flex-nowrap gap-x-5 lg:gap-x-8 xl:gap-x-10">
+                  <ul className="flex w-max flex-nowrap gap-x-5 md:[--work-card:8rem] lg:gap-x-8 lg:[--work-card:9rem] xl:gap-x-10 xl:[--work-card:9.5rem]">
                     {displayWorks.map((work, index) => {
                       const n = formatIndex(index);
                       const isOpen = openWorkId === work._id;
                       const overlayLabel = getWorkOverlayLabel(work);
-                      const creditLine = getWorkCreditLine(work);
 
                       return (
                         <li
                           key={work._id}
                           data-work-id={work._id}
-                          className="group w-[8rem] shrink-0 lg:w-[9rem] xl:w-[9.5rem]"
+                          // Shrinks with the window so the expanded video can
+                          // stay large; the video only gives way at the floor.
+                          className="group w-[8rem] shrink-0 md:w-[clamp(5rem,calc(24dvh_-_54px),var(--work-card))]"
                         >
                           <button
                             type="button"
                             onClick={() => selectWork(work._id)}
                             aria-expanded={isOpen}
-                            className="flex w-full flex-col gap-2 text-left"
+                            className="flex w-full flex-col gap-2 text-left short:gap-1"
                           >
                             <span
-                              className={`text-lg font-light tabular-nums transition-colors lg:text-3xl ${
+                              className={`text-lg font-light tabular-nums transition-colors lg:text-3xl short:lg:text-lg ${
                                 isOpen
                                   ? "text-black"
                                   : "text-neutral-400 group-hover:text-black"
@@ -341,7 +380,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                                     work.thumbnailAlt || work.title || "Work"
                                   }
                                   fill
-                                  className="object-cover"
+                                  className="object-cover object-top"
                                   sizes="160px"
                                   loading="lazy"
                                 />
@@ -355,20 +394,19 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                               <div className="aspect-square w-full bg-neutral-100" />
                             )}
                             {work.title ? (
-                              <p className="line-clamp-2 text-xs font-medium leading-snug">
+                              <p className="line-clamp-2 text-xs font-medium leading-snug short:line-clamp-1">
                                 {work.title}
                               </p>
                             ) : work.description ? (
-                              <p className="line-clamp-2 text-xs font-normal leading-snug">
+                              <p className="line-clamp-2 text-xs font-normal leading-snug short:line-clamp-1">
                                 {work.description}
                               </p>
                             ) : null}
-                            {creditLine ? (
-                              <p className="-mt-1.5 line-clamp-2 pt-0 text-[10px] font-normal leading-snug text-neutral-500">
-                                {creditLine}
-                              </p>
-                            ) : null}
                           </button>
+                          <WorkCredits
+                            work={work}
+                            className="mt-0.5 line-clamp-2 text-[10px] font-normal leading-snug text-neutral-500 short:line-clamp-1"
+                          />
                         </li>
                       );
                     })}
@@ -377,12 +415,15 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                   workPages.map((page, pageIndex) => (
                     <ul
                       key={page[0]?._id ?? pageIndex}
+                      // --work-card is the per-breakpoint thumbnail width; the
+                      // cards cap it against viewport height (see the button
+                      // below) so both rows and the scroll track stay in view.
                       className={
                         desktopPageScroll
-                          ? "grid w-full shrink-0 snap-start grid-cols-3 gap-x-5 gap-y-6 lg:gap-x-8 lg:gap-y-10 xl:gap-x-12 xl:gap-y-14"
+                          ? "grid w-full shrink-0 snap-start grid-cols-3 gap-x-5 gap-y-6 md:[--work-card:7.5rem] md:gap-y-[clamp(1rem,6.5dvh,3.5rem)] lg:gap-x-8 lg:[--work-card:9rem] xl:gap-x-12 xl:[--work-card:9.5rem]"
                           : mobilePageScroll
                             ? "grid w-full shrink-0 snap-start grid-cols-2 gap-x-3 gap-y-6"
-                            : "grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-5 md:gap-y-6 lg:gap-x-8 lg:gap-y-10 xl:gap-x-12 xl:gap-y-14"
+                            : "grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-5 md:[--work-card:7.5rem] md:gap-y-[clamp(1rem,6.5dvh,3.5rem)] lg:gap-x-8 lg:[--work-card:9rem] xl:gap-x-12 xl:[--work-card:9.5rem]"
                       }
                     >
                       {page.map((work, indexInPage) => {
@@ -390,7 +431,6 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                         const n = formatIndex(index);
                         const isOpen = openWorkId === work._id;
                         const overlayLabel = getWorkOverlayLabel(work);
-                        const creditLine = getWorkCreditLine(work);
 
                         return (
                           <li key={work._id} className="group min-w-0">
@@ -398,7 +438,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                               type="button"
                               onClick={() => selectWork(work._id)}
                               aria-expanded={isOpen}
-                              className="flex w-full flex-col gap-1.5 text-left md:max-w-[7.5rem] lg:max-w-[9rem] xl:max-w-[9.5rem] md:gap-2"
+                              className="flex w-full flex-col gap-1.5 text-left md:max-w-[min(var(--work-card),calc((100dvh_-_470px)/2))] md:gap-2"
                             >
                               <span
                                 className={`text-sm font-light tabular-nums transition-colors md:text-lg lg:text-3xl ${
@@ -435,7 +475,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                                       work.thumbnailAlt || work.title || "Work"
                                     }
                                     fill
-                                    className="object-cover"
+                                    className="object-cover object-top"
                                     sizes="160px"
                                     loading={indexInPage < 3 ? "eager" : "lazy"}
                                     priority={pageIndex === 0 && indexInPage < 3}
@@ -454,12 +494,11 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                                   {work.title}
                                 </p>
                               ) : null}
-                              {creditLine ? (
-                                <p className="-mt-1.5 line-clamp-2 pt-0 text-[10px] font-normal leading-snug text-neutral-500 md:text-xs">
-                                  {creditLine}
-                                </p>
-                              ) : null}
                             </button>
+                            <WorkCredits
+                              work={work}
+                              className="mt-0.5 line-clamp-2 max-w-full text-[10px] font-normal leading-snug text-neutral-500 md:max-w-[min(var(--work-card),calc((100dvh_-_470px)/2))] md:text-xs"
+                            />
                           </li>
                         );
                       })}
@@ -478,6 +517,7 @@ export default function WorkSection({ categories, works }: WorkSectionProps) {
                 width="full"
                 placement="below"
                 insetEnds={stripLayout || desktopPageScroll}
+                tight={stripLayout}
               />
             </div>
           )}

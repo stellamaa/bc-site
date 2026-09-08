@@ -1,5 +1,6 @@
 import Image from "next/image";
 import AboutDescription from "@/app/components/AboutDescription";
+import { AboutExpandProvider } from "@/app/components/AboutExpand";
 import AboutProfiles from "@/app/components/AboutProfiles";
 import MobileContactAlign from "@/app/components/MobileContactAlign";
 import type { About } from "@/types/about";
@@ -78,27 +79,30 @@ export default function AboutSection({ about }: AboutSectionProps) {
         }`}
       >
         <MobileContactAlign className="w-full md:contents">
-          {description ? (
-            <AboutDescription
-              description={description}
-              className="mb-6 text-sm font-normal leading-tight whitespace-pre-line md:mb-13 md:max-w-lg md:text-sm lg:mb-10 lg:text-[0.95rem]"
-            />
-          ) : null}
+          {/* One open bio at a time across the intro and both profiles */}
+          <AboutExpandProvider>
+            {description ? (
+              <AboutDescription
+                description={description}
+                className="mb-6 text-sm font-normal leading-tight whitespace-pre-line md:mb-13 md:max-w-lg md:text-sm lg:mb-10 lg:text-[0.95rem]"
+              />
+            ) : null}
 
-          <div
-            className={`grid min-h-0 flex-1 grid-cols-1 items-start gap-6 ${
-              hasFeatured
-                ? "md:grid-cols-1 md:gap-3"
-                : "md:grid-cols-2 md:items-stretch md:gap-8 lg:gap-12"
-            }`}
-          >
-            <div className="flex min-h-0 flex-col gap-6 md:gap-3 md:overflow-y-auto lg:gap-4">
-              <AboutProfiles profiles={profiles} />
-              {hasFeatured ? staffBlock : null}
+            <div
+              className={`grid min-h-0 flex-1 grid-cols-1 items-start gap-6 ${
+                hasFeatured
+                  ? "md:grid-cols-1 md:gap-3"
+                  : "md:grid-cols-2 md:items-stretch md:gap-8 lg:gap-12"
+              }`}
+            >
+              <div className="flex min-h-0 flex-col gap-6 md:gap-3 md:overflow-y-auto lg:gap-4">
+                <AboutProfiles profiles={profiles} />
+                {hasFeatured ? staffBlock : null}
+              </div>
+
+              {!hasFeatured ? staffBlock : null}
             </div>
-
-            {!hasFeatured ? staffBlock : null}
-          </div>
+          </AboutExpandProvider>
         </MobileContactAlign>
       </div>
 

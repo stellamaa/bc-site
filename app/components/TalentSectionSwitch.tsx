@@ -11,6 +11,8 @@ type Props = {
   talents: Talent[];
   works: Work[];
   defaultLayout: TalentLayoutMode;
+  /** Talent highlighted on load, from a `/talent/<slug>` URL. */
+  initialSlug?: string;
 };
 
 /**
@@ -21,13 +23,23 @@ export default function TalentSectionSwitch({
   talents,
   works,
   defaultLayout,
+  initialSlug,
 }: Props) {
   return (
-    <Suspense fallback={<TalentSection talents={talents} works={works} />}>
+    <Suspense
+      fallback={
+        <TalentSection
+          talents={talents}
+          works={works}
+          initialSlug={initialSlug}
+        />
+      }
+    >
       <TalentSectionAlt
         talents={talents}
         works={works}
         defaultLayout={defaultLayout}
+        initialSlug={initialSlug}
       />
     </Suspense>
   );

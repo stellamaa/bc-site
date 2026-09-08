@@ -17,6 +17,8 @@ type ScrollTrackProps = {
    * first thumb to the end of the last (fixed; does not move with paging).
    */
   insetEnds?: boolean;
+  /** Horizontal + below: sit right under the thumbnails instead of a full gap */
+  tight?: boolean;
 };
 
 /** Grey track with black thumb synced to scroll position. */
@@ -28,6 +30,7 @@ export default function ScrollTrack({
   orientation = "horizontal",
   placement = "below",
   insetEnds = false,
+  tight = false,
 }: ScrollTrackProps) {
   const isVertical = orientation === "vertical";
   const [thumb, setThumb] = useState({ offset: 0, size: 100 });
@@ -181,7 +184,10 @@ export default function ScrollTrack({
 
   return (
     <div
-      className={`mt-8 hidden w-full md:flex ${
+      // Gap tightens on short windows so the track stays on screen
+      className={`${
+        tight ? "mt-[clamp(0.5rem,1.4dvh,0.875rem)]" : "mt-[clamp(0.5rem,3.7dvh,2rem)]"
+      } hidden w-full md:flex ${
         width === "half" && !insetEnds ? "justify-center" : ""
       }`}
       style={insetPad}
