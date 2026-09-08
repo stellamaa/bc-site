@@ -1,4 +1,5 @@
 import Image from "next/image";
+import AboutDescription from "@/app/components/AboutDescription";
 import AboutProfiles from "@/app/components/AboutProfiles";
 import MobileContactAlign from "@/app/components/MobileContactAlign";
 import type { About } from "@/types/about";
@@ -78,9 +79,10 @@ export default function AboutSection({ about }: AboutSectionProps) {
       >
         <MobileContactAlign className="w-full md:contents">
           {description ? (
-            <p className="mb-6 shrink-0 text-sm font-normal leading-tight whitespace-pre-line md:mb-13 md:max-w-lg md:text-sm lg:mb-10 lg:text-[0.95rem]">
-              {description}
-            </p>
+            <AboutDescription
+              description={description}
+              className="mb-6 text-sm font-normal leading-tight whitespace-pre-line md:mb-13 md:max-w-lg md:text-sm lg:mb-10 lg:text-[0.95rem]"
+            />
           ) : null}
 
           <div

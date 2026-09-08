@@ -38,36 +38,40 @@ export default function ClientsCarousel({ logos }: ClientsCarouselProps) {
   const loop = [...base, ...base];
 
   return (
-    <div className="clients-marquee relative mt-auto w-full shrink-0 overflow-hidden py-4 md:py-5">
-      <ul
-        className="clients-marquee-track flex w-max items-center gap-10 md:gap-14"
-        style={{ animationDuration: `${base.length * SECONDS_PER_ITEM}s` }}
-        aria-label="Previous clients"
-      >
-        {loop.map((logo, index) => (
-          <li
-            key={`${logo._id}-${index}`}
-            className="relative h-7 w-[5.5rem] shrink-0 md:h-8 md:w-28"
-            aria-hidden={index >= items.length}
-          >
-            <Image
-              src={logo.image!}
-              alt={
-                index >= items.length
-                  ? ""
-                  : logo.imageAlt || logo.title || "Client logo"
-              }
-              fill
-              className="object-contain object-left"
-              sizes="112px"
-            />
-          </li>
-        ))}
-      </ul>
+    // Padding matches the header, so the strip lines up with the nav:
+    // it starts at ABOUT US and ends at CONTACT.
+    <div className="mt-auto w-full shrink-0 px-4 py-4 md:px-16 md:py-5 lg:px-24">
+      <div className="clients-marquee relative overflow-hidden">
+        <ul
+          className="clients-marquee-track flex w-max items-center gap-12 md:gap-16"
+          style={{ animationDuration: `${base.length * SECONDS_PER_ITEM}s` }}
+          aria-label="Previous clients"
+        >
+          {loop.map((logo, index) => (
+            <li
+              key={`${logo._id}-${index}`}
+              className="relative h-8 w-24 shrink-0 md:h-10 md:w-32"
+              aria-hidden={index >= items.length}
+            >
+              <Image
+                src={logo.image!}
+                alt={
+                  index >= items.length
+                    ? ""
+                    : logo.imageAlt || logo.title || "Client logo"
+                }
+                fill
+                className="object-contain object-center"
+                sizes="128px"
+              />
+            </li>
+          ))}
+        </ul>
 
-      <p className="pointer-events-none absolute inset-y-0 left-0 flex items-center bg-white pr-6 pl-3 text-[10px] font-medium tracking-[0.12em] text-neutral-400 uppercase md:pr-10 md:pl-8 md:text-xs lg:pl-10">
-        Previous Clients
-      </p>
+        <p className="pointer-events-none absolute inset-y-0 left-0 flex items-center bg-white pr-6 text-[10px] font-medium tracking-[0.12em] text-neutral-400 uppercase md:pr-10 md:text-xs">
+          Previous Clients
+        </p>
+      </div>
     </div>
   );
 }
