@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { preloadImages } from "@/lib/introMedia";
-import Logo from "@/app/BLANK_CO.svg";
+import Logo from "@/app/logo.svg";
 
 export type IntroMediaItem = {
   type: "image" | "video";
@@ -139,11 +139,10 @@ export default function IntroLoader({
         <Image
           src={Logo}
           alt="BlankCo Logo"
-          width={808}
-          height={139}
-          unoptimized
           className="h-[1.15em] w-auto md:h-[1em]"
           priority
+          // The optimizer refuses SVG; serve the file as-is.
+          unoptimized
         />
 
         <div className="flex items-center font-normal text-[clamp(0.8rem,30vw,10.5rem)] md:text-[clamp(1.5rem,20vw,20rem)]">

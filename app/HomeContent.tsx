@@ -1,4 +1,6 @@
+import Image from "next/image";
 import { Suspense } from "react";
+import Logo from "@/app/logo.svg";
 import AboutSection from "@/app/components/AboutSection";
 import ClientsCarousel from "@/app/components/ClientsCarousel";
 import ContactSection from "@/app/components/ContactSection";
@@ -69,8 +71,15 @@ export default async function HomeContent({
           className="scroll-mt-12 md:scroll-mt-20 md:box-border md:flex md:h-dvh md:min-h-dvh md:-mt-20 md:flex-col md:pt-20"
         >
           <div className="px-4 pt-4 pb-2 md:hidden">
-            <h1 className="mb-6 text-center text-3xl font-medium tracking-tight uppercase">
-              BLANK C()
+            <h1 className="mb-6 flex justify-center text-3xl">
+              {/* 0.66em is the cap height of the text this replaced. */}
+              <Image
+                src={Logo}
+                alt="Blank Co"
+                className="h-[0.66em] w-auto"
+                priority
+                unoptimized
+              />
             </h1>
             {description && description.length > 0 ? (
               <LandingMobileCopy description={description} />
