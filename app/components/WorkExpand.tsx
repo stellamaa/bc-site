@@ -24,6 +24,9 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
 
   const [playing, setPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
+  const [hovered, setHovered] = useState(false);
+  // Touch has no hover, so there the browser's bar stays as the only control.
+  const [canHover, setCanHover] = useState(true);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -66,6 +69,14 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   }, [galleryIndex]);
 
   useEffect(() => {
+    const query = window.matchMedia("(hover: hover)");
+    const update = () => setCanHover(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -84,23 +95,25 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const canNext = galleryIndex < galleryLength - 1;
   const isVideoPlayer = mediaKind === "video" || mediaKind === "videoGallery";
 
-  // Once an uploaded video starts, the browser's own bar gives it a timeline.
-  const nativeControls = isVideoPlayer && video?.kind === "file" && playing;
+  const started = isVideoPlayer && video?.kind === "file" && playing;
 
-  const showPlayOverlay =
-    isVideoPlayer &&
-    video &&
-    (!playing || (video.kind === "file" && isPaused));
+  /**
+   * Once it's running the frame stays clean: the browser's bar (the timeline)
+   * and the play/pause glyph both come back only while the pointer is over it.
+   */
+  const nativeControls = started && (hovered || !canHover);
 
-  const showPauseHitTarget =
-    isVideoPlayer && video?.kind === "file" && playing && !isPaused;
+  // The poster's "(>)" — before anything has played.
+  const showPlayOverlay = isVideoPlayer && video && !playing;
+
+  const showToggleGlyph = started && canHover;
 
   /**
    * With the timeline on screen the overlay can't swallow the whole frame, so
    * only the glyph takes clicks — the bar and the video itself stay live.
    */
-  const overlayReach = nativeControls ? "pointer-events-none" : "";
-  const glyphReach = nativeControls ? "pointer-events-auto cursor-pointer" : "";
+  const overlayReach = started ? "pointer-events-none" : "";
+  const glyphReach = started ? "pointer-events-auto cursor-pointer" : "";
 
   const handlePlay = async () => {
     setPlaying(true);
@@ -137,7 +150,11 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
         On short windows the media is capped by height (16:9 kept via max-width)
         so the whole expand still fits under the nav without scrolling.
       */}
-      <div className="group relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[min(46rem,calc(96dvh_-_10px))] lg:w-[82%] lg:max-w-[min(62rem,calc(96dvh_-_10px))]">
+      <div
+        className="group relative aspect-video w-full overflow-hidden bg-neutral-200 [container-type:size] md:mt-0 md:w-[48%] md:max-w-[min(46rem,calc(96dvh_-_10px))] lg:w-[82%] lg:max-w-[min(62rem,calc(96dvh_-_10px))]"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
         {isVideoPlayer && video ? (
           <>
             {video.kind === "youtube" && playing ? (
@@ -194,23 +211,23 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
                 className={`absolute inset-0 z-10 flex items-center justify-center pb-2 font-normal tracking-wide text-white transition-opacity hover:opacity-80 text-[50cqh] leading-none md:pb-6 ${overlayReach}`}
                 aria-label="Play video"
               >
-                <span className={glyphReach}>
-                  {playing && isPaused ? "(||)" : "(>)"}
-                </span>
+                <span className={glyphReach}>(&gt;)</span>
               </button>
             ) : null}
 
-            {showPauseHitTarget ? (
+            {showToggleGlyph ? (
               <button
                 type="button"
-                onClick={handlePause}
-                className={`absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white transition-opacity text-[50cqh] leading-none md:pb-6 ${overlayReach}`}
-                aria-label="Pause video"
+                onClick={isPaused ? handlePlay : handlePause}
+                className={`absolute inset-0 z-10 flex items-center justify-center pb-10 font-normal tracking-wide text-white text-[50cqh] leading-none md:pb-6 ${overlayReach}`}
+                aria-label={isPaused ? "Play video" : "Pause video"}
               >
                 <span
-                  className={`opacity-0 md:group-hover:opacity-100 ${glyphReach}`}
+                  className={`transition-opacity ${
+                    hovered ? "opacity-100" : "opacity-0"
+                  } ${glyphReach}`}
                 >
-                  (||)
+                  {isPaused ? "(>)" : "(||)"}
                 </span>
               </button>
             ) : null}
