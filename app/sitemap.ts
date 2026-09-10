@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { getTalents, getWorks } from "@/sanity/sanity-utils";
 
+export const dynamic = "force-static";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [works, talents] = await Promise.all([
     getWorks().catch(() => []),
