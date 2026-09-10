@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import SiteChrome from "@/app/components/SiteChrome";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_DESCRIPTION_FALLBACK,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 import "./globals.css";
 
 const foundersGrotesk = localFont({
   src: [
     {
-      path: "./fonts/FoundersGrotesk-Regular.otf",
+      path: "./fonts/FoundersGrotesk-Regular.woff2",
       weight: "400",
       style: "normal",
     },
     {
-      path: "./fonts/FoundersGrotesk-Medium.otf",
+      path: "./fonts/FoundersGrotesk-Medium.woff2",
       weight: "500",
       style: "normal",
     },
@@ -21,9 +27,27 @@ const foundersGrotesk = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "BlankCo",
-  description:
-    "BlankCo represents exceptional Film Directors, Creative Directors, and AI Creatives.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION_FALLBACK,
+  applicationName: SITE_NAME,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_GB",
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [DEFAULT_OG_IMAGE.url],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

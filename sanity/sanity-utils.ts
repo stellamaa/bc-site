@@ -10,7 +10,6 @@ import { LandingPage } from "@/types/landingPage";
 import { Logo } from "@/types/logo";
 import { Talent } from "@/types/talent";
 import { Work } from "@/types/work";
-import { WorkPage } from "@/types/workPage";
 
 function getSanityClient() {
   return createClient({
@@ -24,11 +23,6 @@ function getSanityClient() {
 const landingPageProjection = groq`{
   _id,
   description
-}`;
-
-const workPageProjection = groq`{
-  _id,
-  title
 }`;
 
 const categoryProjection = groq`{
@@ -51,8 +45,7 @@ const workProjection = groq`{
   "gallery": gallery[]{
     _key,
     "url": asset->url,
-    alt,
-    caption
+    alt
   },
   "videoGallery": videoGallery[]{
     _key,
@@ -84,11 +77,6 @@ const talentProjection = groq`{
   "image": image.asset->url,
   "imageAlt": image.alt,
   bio,
-  "categories": categories[]->{
-    _id,
-    title,
-    "slug": slug.current
-  },
   "workOrder": workOrder[]->{
     _id
   }
@@ -125,9 +113,7 @@ const aboutProjection = groq`{
 
 const logoProjection = groq`{
   _id,
-  title,
-  "image": image.asset->url,
-  "imageAlt": image.alt
+  title
 }`;
 
 export async function getLandingPage(): Promise<LandingPage | null> {
@@ -135,11 +121,6 @@ export async function getLandingPage(): Promise<LandingPage | null> {
   return client.fetch(
     groq`*[_type == "landingPage"][0] ${landingPageProjection}`,
   );
-}
-
-export async function getWorkPage(): Promise<WorkPage | null> {
-  const client = getSanityClient();
-  return client.fetch(groq`*[_type == "workPage"][0] ${workPageProjection}`);
 }
 
 export async function getAbout(): Promise<About | null> {
@@ -170,18 +151,6 @@ export async function getWorks(): Promise<Work[]> {
   );
 }
 
-export async function getWorksByCategorySlugs(
-  categorySlugs: string[],
-): Promise<Work[]> {
-  if (categorySlugs.length === 0) return getWorks();
-
-  const client = getSanityClient();
-  return client.fetch(
-    groq`*[_type == "work" && count((categories[]->slug.current)[@ in $categorySlugs]) > 0] | order(_createdAt desc) ${workProjection}`,
-    { categorySlugs },
-  );
-}
-
 export async function getWorkBySlug(slug: string): Promise<Work | null> {
   const client = getSanityClient();
   return client.fetch(
@@ -197,30 +166,10 @@ export async function getTalents(): Promise<Talent[]> {
   );
 }
 
-export async function getTalentsByCategorySlugs(
-  categorySlugs: string[],
-): Promise<Talent[]> {
-  if (categorySlugs.length === 0) return getTalents();
-
-  const client = getSanityClient();
-  return client.fetch(
-    groq`*[_type == "talent" && count((categories[]->slug.current)[@ in $categorySlugs]) > 0] | order(name asc) ${talentProjection}`,
-    { categorySlugs },
-  );
-}
-
 export async function getTalentBySlug(slug: string): Promise<Talent | null> {
   const client = getSanityClient();
   return client.fetch(
     groq`*[_type == "talent" && slug.current == $slug][0] ${talentProjection}`,
-    { slug },
-  );
-}
-
-export async function getWorksByTalentSlug(slug: string): Promise<Work[]> {
-  const client = getSanityClient();
-  return client.fetch(
-    groq`*[_type == "work" && $slug in talent[]->slug.current] | order(_createdAt desc) ${workProjection}`,
     { slug },
   );
 }

@@ -82,7 +82,7 @@ export default function IntroLoader({
     };
   }, [phase, slides.length]);
 
-  // Warm critical first-screen images in the background (non-blocking)
+  // Warm the intro slides only — grid thumbs use next/image on their own.
   useEffect(() => {
     if (DESIGN_STATIC || phase !== "cycle") return;
 

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScrollTrack from "@/app/components/ScrollTrack";
 import WorkExpand from "@/app/components/WorkExpand";
 import { pushAppPath, replaceAppPath } from "@/lib/documentUrl";
+import { workThumbnailUrl } from "@/lib/mediaUrl";
 import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
 import { talentPath, workPath } from "@/lib/sharePaths";
 import {
@@ -412,7 +413,7 @@ export default function TalentSection({
                                 <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
                                   {work.thumbnail ? (
                                     <Image
-                                      src={work.thumbnail}
+                                      src={workThumbnailUrl(work.thumbnail)!}
                                       alt={
                                         work.thumbnailAlt ||
                                         work.title ||
@@ -583,7 +584,7 @@ export default function TalentSection({
                                     <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
                                       {work.thumbnail ? (
                                         <Image
-                                          src={work.thumbnail}
+                                          src={workThumbnailUrl(work.thumbnail)!}
                                           alt={
                                             work.thumbnailAlt ||
                                             work.title ||
@@ -637,7 +638,7 @@ export default function TalentSection({
                                       <div className="relative aspect-square size-[7rem] overflow-hidden bg-neutral-100">
                                         {work.thumbnail ? (
                                           <Image
-                                            src={work.thumbnail}
+                                            src={workThumbnailUrl(work.thumbnail)!}
                                             alt={
                                               work.thumbnailAlt ||
                                               work.title ||

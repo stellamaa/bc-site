@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import TalentSection from "@/app/components/TalentSection";
 import WorkExpand from "@/app/components/WorkExpand";
 import { pushAppPath, replaceAppPath } from "@/lib/documentUrl";
+import { workThumbnailUrl } from "@/lib/mediaUrl";
 import { getWorksForTalent, sortByNameAsc } from "@/lib/order";
 import { talentPath, workPath } from "@/lib/sharePaths";
 import {
@@ -380,7 +381,7 @@ export default function TalentSectionAlt({
                           <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
                             {work.thumbnail ? (
                               <Image
-                                src={work.thumbnail}
+                                src={workThumbnailUrl(work.thumbnail)!}
                                 alt={
                                   work.thumbnailAlt || work.title || "Work"
                                 }

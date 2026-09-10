@@ -9,6 +9,7 @@ import {
   getWorkMediaKind,
   parseVideoSource,
 } from "@/lib/workMedia";
+import { workGalleryUrl, workPosterUrl } from "@/lib/mediaUrl";
 import { getWorkCreditLine } from "@/lib/workCredits";
 import type { Work } from "@/types/work";
 
@@ -47,7 +48,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   }, [mediaKind, work.videoUrl, work.videoFileUrl, activeVideoItem]);
 
   const poster =
-    activeVideoItem?.poster || work.thumbnail || undefined;
+    workPosterUrl(activeVideoItem?.poster || work.thumbnail) || undefined;
 
   useEffect(() => {
     setPlaying(false);
@@ -175,6 +176,8 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
                 poster={poster}
                 className={`absolute inset-0 h-full w-full object-cover ${playing ? "" : "pointer-events-none"}`}
                 playsInline
+                // Don't pull the file until someone hits play.
+                preload="none"
                 controls={nativeControls}
                 controlsList="nodownload"
                 onPlay={() => setIsPaused(false)}
@@ -236,7 +239,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
 
         {mediaKind === "gallery" && currentImage?.url ? (
           <Image
-            src={currentImage.url}
+            src={workGalleryUrl(currentImage.url) || currentImage.url}
             alt={currentImage.alt || work.title || "Gallery image"}
             fill
             className="object-contain"

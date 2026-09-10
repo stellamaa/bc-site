@@ -11,6 +11,7 @@ import {
   replaceAppPath,
   replaceDocumentUrl,
 } from "@/lib/documentUrl";
+import { workThumbnailUrl } from "@/lib/mediaUrl";
 import { workPath } from "@/lib/sharePaths";
 import { shuffleArray } from "@/lib/order";
 import { getCategorySlugsFromLocation } from "@/lib/workCredits";
@@ -375,7 +376,7 @@ export default function WorkSection({
                             {work.thumbnail ? (
                               <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
                                 <Image
-                                  src={work.thumbnail}
+                                  src={workThumbnailUrl(work.thumbnail)!}
                                   alt={
                                     work.thumbnailAlt || work.title || "Work"
                                   }
@@ -470,7 +471,7 @@ export default function WorkSection({
                               {work.thumbnail ? (
                                 <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
                                   <Image
-                                    src={work.thumbnail}
+                                    src={workThumbnailUrl(work.thumbnail)!}
                                     alt={
                                       work.thumbnailAlt || work.title || "Work"
                                     }

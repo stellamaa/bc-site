@@ -10,7 +10,7 @@ import LandingMobileCopy from "@/app/components/LandingMobileCopy";
 import SectionPager from "@/app/components/SectionPager";
 import TalentSectionSwitch from "@/app/components/TalentSectionSwitch";
 import WorkSectionSwitch from "@/app/components/WorkSectionSwitch";
-import { collectIntroMedia, collectCriticalImageUrls } from "@/lib/introMedia";
+import { collectIntroMedia } from "@/lib/introMedia";
 import {
   getAbout,
   getCategories,
@@ -55,11 +55,10 @@ export default async function HomeContent({
 
   const description = landing?.description ?? null;
   const introMedia = collectIntroMedia(works);
-  const preloadUrls = collectCriticalImageUrls(works);
 
   return (
     <main className="flex flex-col bg-white text-black">
-      <IntroLoader media={introMedia} preloadUrls={preloadUrls} />
+      <IntroLoader media={introMedia} />
 
       <SectionPager
         initialSection={
