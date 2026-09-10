@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { Logo } from "@/types/logo";
 
@@ -27,11 +26,11 @@ export default function ClientsCarousel({
   logos,
   className = "",
 }: ClientsCarouselProps) {
-  const withImages = logos.filter((logo) => Boolean(logo.image));
-  const [items, setItems] = useState(withImages);
+  const withTitles = logos.filter((logo) => Boolean(logo.title?.trim()));
+  const [items, setItems] = useState(withTitles);
 
   useEffect(() => {
-    setItems(shuffle(withImages));
+    setItems(shuffle(withTitles));
   }, [logos]);
 
   if (items.length === 0) return null;
@@ -49,33 +48,23 @@ export default function ClientsCarousel({
     >
       <div className="clients-marquee relative overflow-hidden">
         <ul
-          className="clients-marquee-track flex w-max items-center gap-12 md:gap-16"
+          className="clients-marquee-track flex w-max items-center gap-8 md:gap-12"
           style={{ animationDuration: `${base.length * SECONDS_PER_ITEM}s` }}
-          aria-label="Previous clients"
+          aria-label="clients"
         >
           {loop.map((logo, index) => (
             <li
               key={`${logo._id}-${index}`}
-              className="relative h-[1.6rem] w-[4.8rem] shrink-0 md:h-8 md:w-[6.4rem]"
+              className="shrink-0 text-[10px] font-normal tracking-[0.08em] text-neutral-500 md:text-xs"
               aria-hidden={index >= items.length}
             >
-              <Image
-                src={logo.image!}
-                alt={
-                  index >= items.length
-                    ? ""
-                    : logo.imageAlt || logo.title || "Client logo"
-                }
-                fill
-                className="object-contain object-center"
-                sizes="128px"
-              />
+              {logo.title}
             </li>
           ))}
         </ul>
 
         <p className="pointer-events-none absolute inset-y-0 left-0 flex items-center bg-white pr-6 text-[10px] font-medium tracking-[0.12em] text-neutral-400 uppercase md:pr-10 md:text-xs">
-          Previous Clients
+           Clients
         </p>
       </div>
     </div>

@@ -84,7 +84,7 @@ export default function AboutSection({ about }: AboutSectionProps) {
             {description ? (
               <AboutDescription
                 description={description}
-                className="mb-6 text-sm font-normal leading-tight whitespace-pre-line md:mb-13 md:max-w-lg md:text-sm lg:mb-10 lg:text-[0.95rem]"
+                className="mb-6 max-w-[49ch] text-sm font-normal leading-tight whitespace-pre-line md:mb-13 md:text-sm lg:mb-10 lg:text-[0.95rem]"
               />
             ) : null}
 
@@ -97,6 +97,31 @@ export default function AboutSection({ about }: AboutSectionProps) {
             >
               <div className="flex min-h-0 flex-col gap-6 md:gap-3 md:overflow-y-auto lg:gap-4">
                 <AboutProfiles profiles={profiles} />
+                <div className="flex flex-col gap-0.5 text-xs font-normal leading-snug text-black md:text-sm">
+                  <p>Site credit:</p>
+                  <p>
+                    Design –{" "}
+                    <a
+                      href="https://mynameismina.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline-offset-2 transition-opacity hover:opacity-60 hover:underline"
+                    >
+                      Mina Abdurahman
+                    </a>
+                  </p>
+                  <p>
+                    Design support and Development –{" "}
+                    <a
+                      href="https://stellamathioudakis.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline-offset-2 transition-opacity hover:opacity-60 hover:underline"
+                    >
+                      Stella Mathioudakis
+                    </a>
+                  </p>
+                </div>
                 {hasFeatured ? staffBlock : null}
               </div>
 

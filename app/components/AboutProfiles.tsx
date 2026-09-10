@@ -32,7 +32,7 @@ function ProfileBio({ bio, profileKey }: { bio: string; profileKey: string }) {
   }, [bio, isExpanded]);
 
   return (
-    <div className="min-w-0 flex-1 md:w-[55%] md:flex-none">
+    <div className="min-w-0 max-w-[36ch] flex-1 md:flex-none">
       <p
         ref={textRef}
         className={`${bioClass} ${isExpanded ? "" : "line-clamp-4"}`}

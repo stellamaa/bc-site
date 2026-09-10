@@ -72,7 +72,7 @@ export default function LandingHero({
       {description && description.length > 0 ? (
         <PortableText
           value={description}
-          className="mt-8 md:mt-[clamp(1rem,3vh,2.5rem)] md:w-2/3 lg:w-1/2 text-center text-sm md:text-[clamp(0.875rem,1.9vh,1.125rem)] font-normal leading-[1.1] text-black [&_p]:leading-[inherit] [&_p]:mb-2"
+          className="mt-8 md:mt-[clamp(1rem,3vh,2.5rem)] md:w-[62ch] lg:w-[75ch] text-center text-sm md:text-[clamp(0.875rem,1.9vh,1.125rem)] font-normal leading-[1.1] text-black [&_p]:leading-[inherit] [&_p]:mb-2"
         />
       ) : null}
     </div>

@@ -17,7 +17,7 @@ function mapsUrl(address: string) {
 }
 
 const linkClass =
-  "group text-3xl font-medium uppercase tracking-tight text-neutral-400 transition-colors hover:text-black md:text-7xl lg:text-8xl";
+  "group text-3xl font-medium uppercase tracking-tight text-neutral-400 transition-colors hover:text-black md:text-[clamp(2.5rem,min(9.5vh,9.5vw),6rem)] md:leading-[1.05]";
 
 function HoverLink({
   href,

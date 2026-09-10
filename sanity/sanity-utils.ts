@@ -228,6 +228,6 @@ export async function getWorksByTalentSlug(slug: string): Promise<Work[]> {
 export async function getLogos(): Promise<Logo[]> {
   const client = getSanityClient();
   return client.fetch(
-    groq`*[_type == "logo" && defined(image.asset)] | order(title asc) ${logoProjection}`,
+    groq`*[_type == "logo" && defined(title) && title != ""] | order(title asc) ${logoProjection}`,
   );
 }
