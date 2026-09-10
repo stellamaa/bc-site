@@ -7,13 +7,13 @@ import {
   SECTION_IDS,
   type SectionId,
 } from "@/app/components/SectionPager";
-import { replaceAppPath } from "@/lib/documentUrl";
+import { hashForSection, replaceAppPath } from "@/lib/documentUrl";
 import { slugFromPathname } from "@/lib/sharePaths";
 
 const navItems = [
   { href: "/#about", label: "ABOUT US", section: "about" as const },
   { href: "/#work", label: "WORK", section: "work" as const },
-  { href: "/#landing", label: "BC", isLogo: true, section: "landing" as const },
+  { href: "/", label: "BC", isLogo: true, section: "landing" as const },
   { href: "/#talent", label: "TALENT", section: "talent" as const },
   { href: "/#contact", label: "CONTACT", section: "contact" as const },
 ] as const;
@@ -109,7 +109,7 @@ export default function Header({ className = "" }: HeaderProps) {
       }
       e.preventDefault();
       // Back to `/` — a work/talent path in the address bar shouldn't stick.
-      replaceAppPath("/", "", section);
+      replaceAppPath("/", "", hashForSection(section));
       setActiveSection(section);
       window.dispatchEvent(
         new CustomEvent("bc:section", { detail: { section } }),

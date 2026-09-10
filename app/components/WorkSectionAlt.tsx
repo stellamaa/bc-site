@@ -194,7 +194,7 @@ export default function WorkSectionAlt({
     for (const slug of defaults) params.append("category", slug);
     const query = params.toString();
     // Back to the landing document — an open work's `/work/<slug>` must not stick
-    replaceAppPath("/", query, "landing");
+    replaceAppPath("/", query, "");
   }, [creativeSlug, forceOverlayUi, searchParams]);
 
   useEffect(() => {

@@ -83,3 +83,8 @@ export function replaceAppPath(path: string, search?: string, hash = "") {
     withSearchHash(absoluteAppPath(path), search ?? currentSearch(), hash),
   );
 }
+
+/** Landing is `/` with no hash; other sections keep `#work`, `#contact`, etc. */
+export function hashForSection(section: string): string {
+  return section === "landing" ? "" : section;
+}

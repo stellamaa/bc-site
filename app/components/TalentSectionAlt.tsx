@@ -85,7 +85,7 @@ export default function TalentSectionAlt({
   const dismissMenuWithoutSelection = () => {
     closeMenu();
     if (selectedSlug) return;
-    replaceAppPath("/", "", "landing");
+    replaceAppPath("/", "", "");
     document
       .getElementById("landing")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });

@@ -68,62 +68,70 @@ export default function ContactSection({
   return (
     <section
       id="contact"
-      // Mobile: the links start a quarter of the way down the screen and the
-      // footer rides the bottom edge, so the page ends with it.
-      className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start px-4 pt-[25dvh] pb-12 md:mt-20 md:justify-center md:scroll-mt-20 md:px-16 md:py-10 lg:px-24"
+      // Mobile: links start a quarter down; logos sit on the bottom edge.
+      // Desktop: mirror landing — centred in the space above a carousel-height
+      // spacer so the links line up with the category list.
+      className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start px-4 pt-[25dvh] pb-12 md:h-full md:min-h-0 md:scroll-mt-20 md:justify-start md:px-16 md:py-0 lg:px-24"
     >
       {!hasLinks ? (
         <div className="min-h-[40vh]" aria-hidden />
       ) : (
-        <ul className="flex flex-col items-center gap-6 text-center md:gap-5">
-          {email ? (
-            <li>
-              <HoverLink href={`mailto:${email}`} label="Email" />
-            </li>
-          ) : null}
-          {instagram ? (
-            <li>
-              <HoverLink href={instagram} label="Instagram" external />
-            </li>
-          ) : null}
-          {linkedin ? (
-            <li>
-              <HoverLink href={linkedin} label="LinkedIn" external />
-            </li>
-          ) : null}
-          {phone ? (
-            <li>
-              <HoverLink
-                href={`tel:${phone.replace(/\s+/g, "")}`}
-                label={phone}
-              />
-            </li>
-          ) : null}
-          {street ? (
-            <li>
-              <a
-                href={mapsUrl(address!)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${linkClass} whitespace-pre-line`}
-              >
-                <span className="opacity-0 transition-opacity group-hover:opacity-100">
-                  (
-                </span>
-                {street}
-                {postcode ? (
-                  <span className="md:hidden">{`\n${postcode}`}</span>
-                ) : null}
-                <span className="opacity-0 transition-opacity group-hover:opacity-100">
-                  )
-                </span>
-              </a>
-            </li>
-          ) : null}
-        </ul>
+        <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-center">
+          <ul className="flex flex-col items-center gap-6 text-center md:gap-[clamp(0.25rem,1.4vh,1.25rem)]">
+            {email ? (
+              <li>
+                <HoverLink href={`mailto:${email}`} label="Email" />
+              </li>
+            ) : null}
+            {instagram ? (
+              <li>
+                <HoverLink href={instagram} label="Instagram" external />
+              </li>
+            ) : null}
+            {linkedin ? (
+              <li>
+                <HoverLink href={linkedin} label="LinkedIn" external />
+              </li>
+            ) : null}
+            {phone ? (
+              <li>
+                <HoverLink
+                  href={`tel:${phone.replace(/\s+/g, "")}`}
+                  label={phone}
+                />
+              </li>
+            ) : null}
+            {street ? (
+              <li>
+                <a
+                  href={mapsUrl(address!)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${linkClass} whitespace-pre-line`}
+                >
+                  <span className="opacity-0 transition-opacity group-hover:opacity-100">
+                    (
+                  </span>
+                  {street}
+                  {postcode ? (
+                    <span className="md:hidden">{`\n${postcode}`}</span>
+                  ) : null}
+                  <span className="opacity-0 transition-opacity group-hover:opacity-100">
+                    )
+                  </span>
+                </a>
+              </li>
+            ) : null}
+          </ul>
+        </div>
       )}
 
       {footer}
+      {/* Matches the landing clients strip so contact links sit at the same height. */}
+      <div
+        className="pointer-events-none hidden w-full shrink-0 md:block md:h-[11rem]"
+        aria-hidden
+      />
     </section>
   );
 }

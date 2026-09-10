@@ -201,7 +201,7 @@ export default function WorkSection({
         ?.section;
       if (section === "landing") {
         setOpenWorkId(null);
-        replaceAppPath("/", "", "landing");
+        replaceAppPath("/", "", "");
       }
     };
     window.addEventListener("bc:section", onSection);

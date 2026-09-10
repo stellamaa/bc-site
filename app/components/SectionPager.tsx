@@ -43,6 +43,13 @@ export default function SectionPager({
 
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, "");
+    if (hash === "landing") {
+      // Old bookmarks: `/#landing` → clean `/`
+      setActive("landing");
+      const { pathname, search } = window.location;
+      window.history.replaceState(window.history.state, "", `${pathname}${search}`);
+      return;
+    }
     if (isSectionId(hash)) setActive(hash);
   }, []);
 
