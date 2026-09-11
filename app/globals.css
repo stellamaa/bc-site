@@ -67,19 +67,29 @@ body {
 
 @keyframes clients-marquee {
   from {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
   to {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
+}
+
+.clients-marquee {
+  /* Own compositor layer so iOS actually paints the moving track. */
+  transform: translateZ(0);
 }
 
 .clients-marquee-track {
   animation: clients-marquee 45s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
-.clients-marquee:hover .clients-marquee-track {
-  animation-play-state: paused;
+/* Touch leaves :hover stuck after you lift your finger — only pause with a mouse. */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .clients-marquee:hover .clients-marquee-track {
+    animation-play-state: paused;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

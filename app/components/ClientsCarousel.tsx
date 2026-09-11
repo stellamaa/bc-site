@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Logo } from "@/types/logo";
 
 type ClientsCarouselProps = {
@@ -28,10 +28,39 @@ export default function ClientsCarousel({
 }: ClientsCarouselProps) {
   const withTitles = logos.filter((logo) => Boolean(logo.title?.trim()));
   const [items, setItems] = useState(withTitles);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     setItems(shuffle(withTitles));
   }, [logos]);
+
+  // WebKit often freezes a CSS marquee that started while the strip was
+  // off-screen (the mobile list sits at the bottom of Contact). Restart once
+  // it is in view so the -50% translate resolves against the real width.
+  useEffect(() => {
+    const root = rootRef.current;
+    const track = trackRef.current;
+    if (!root || !track || items.length === 0) return;
+
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      track.style.animationName = "none";
+      void track.offsetWidth;
+      track.style.animationName = "";
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) start();
+      },
+      { threshold: 0 },
+    );
+    io.observe(root);
+    return () => io.disconnect();
+  }, [items]);
 
   if (items.length === 0) return null;
 
@@ -44,11 +73,15 @@ export default function ClientsCarousel({
     // Padding matches the header, so the strip lines up with the nav:
     // it starts at ABOUT US and ends at CONTACT.
     <div
-      className={`w-full shrink-0 px-4 py-4 md:px-16 md:py-5 lg:px-24 ${className}`}
+      className={`w-full min-w-0 max-w-full shrink-0 px-4 py-4 md:px-16 md:py-5 lg:px-24 ${className}`}
     >
-      <div className="clients-marquee relative overflow-hidden">
+      <div
+        ref={rootRef}
+        className="clients-marquee relative w-full min-w-0 overflow-hidden"
+      >
         <ul
-          className="clients-marquee-track flex w-max items-center gap-8 md:gap-12"
+          ref={trackRef}
+          className="clients-marquee-track flex w-max flex-nowrap items-center gap-8 whitespace-nowrap md:gap-12"
           style={{ animationDuration: `${base.length * SECONDS_PER_ITEM}s` }}
           aria-label="clients"
         >
