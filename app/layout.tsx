@@ -58,6 +58,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${foundersGrotesk.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-white text-black font-sans">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if("scrollRestoration" in history)history.scrollRestoration="manual"}catch(e){}`,
+          }}
+        />
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>

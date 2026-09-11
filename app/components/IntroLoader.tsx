@@ -2,6 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import {
+  scrollWindowToTop,
+  shouldStartAtTop,
+} from "@/app/components/StartAtTop";
 import { preloadImages } from "@/lib/introMedia";
 import Logo from "@/app/logo.svg";
 
@@ -58,6 +62,7 @@ export default function IntroLoader({
     setPhase("cycle");
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    if (shouldStartAtTop()) scrollWindowToTop();
 
     return () => {
       document.body.style.overflow = prevOverflow;
@@ -114,6 +119,7 @@ export default function IntroLoader({
           // ignore
         }
         document.body.style.overflow = "";
+        if (shouldStartAtTop()) scrollWindowToTop();
         setPhase("done");
       }, FADE_MS);
       return () => window.clearTimeout(t);

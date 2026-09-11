@@ -68,15 +68,15 @@ export default function ContactSection({
   return (
     <section
       id="contact"
-      // Mobile: links start a quarter down; logos sit on the bottom edge.
+      // Mobile: links sit just under the header; logos stay on the bottom edge.
       // Desktop: mirror landing — centred in the space above a carousel-height
       // spacer so the links line up with the category list.
-      className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start px-4 pt-[25dvh] pb-12 md:h-full md:min-h-0 md:scroll-mt-20 md:justify-start md:px-16 md:py-0 lg:px-24"
+      className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start px-4 pt-16 pb-12 md:h-full md:min-h-0 md:scroll-mt-20 md:justify-start md:px-16 md:py-0 lg:px-24"
     >
       {!hasLinks ? (
         <div className="min-h-[40vh]" aria-hidden />
       ) : (
-        <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-center">
+        <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-start md:justify-center">
           <ul className="flex flex-col items-center gap-6 text-center md:gap-[clamp(0.25rem,1.4vh,1.25rem)]">
             {email ? (
               <li>

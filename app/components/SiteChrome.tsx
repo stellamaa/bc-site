@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Header from "@/app/components/Header";
+import StartAtTop from "@/app/components/StartAtTop";
 
 export default function SiteChrome({
   children,
@@ -17,6 +18,7 @@ export default function SiteChrome({
 
   return (
     <>
+      <StartAtTop />
       <div className="fixed inset-x-0 top-0 z-50 bg-white">
         <Header />
       </div>
