@@ -37,6 +37,31 @@ const talent = defineType({
       description: "Optional. Talent can be published without a bio.",
     }),
     defineField({
+      name: "isDirector",
+      title: "Director",
+      type: "boolean",
+      description: "Shows in the Director column on Talent. Tick both for people in both lists.",
+      initialValue: true,
+      validation: (rule) =>
+        rule.custom((isDirector, context) => {
+          const parent = context.parent as {
+            isPhotographer?: boolean;
+          };
+          if (isDirector === false && parent.isPhotographer !== true) {
+            return "Tick Director, Photographer, or both.";
+          }
+          return true;
+        }),
+    }),
+    defineField({
+      name: "isPhotographer",
+      title: "Photographer",
+      type: "boolean",
+      description:
+        "Shows in the Photographer column. Their Talent profile then lists Photography works only.",
+      initialValue: false,
+    }),
+    defineField({
       name: "categories",
       title: "Roles / categories",
       type: "array",
@@ -72,6 +97,19 @@ const talent = defineType({
     select: {
       title: "name",
       media: "image",
+      isDirector: "isDirector",
+      isPhotographer: "isPhotographer",
+    },
+    prepare({ title, media, isDirector, isPhotographer }) {
+      const roles = [
+        isDirector !== false ? "Director" : null,
+        isPhotographer ? "Photographer" : null,
+      ].filter(Boolean);
+      return {
+        title,
+        media,
+        subtitle: roles.length ? roles.join(" · ") : "No role",
+      };
     },
   },
 });

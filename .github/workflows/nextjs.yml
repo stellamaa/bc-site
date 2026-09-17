@@ -12,4 +12,5 @@ jobs:
       - name: Netlify only
         run: |
           echo "GitHub Pages deploy is disabled."
-          echo "Use Netlify for builds and Sanity rebuild webhooks."
+          echo "Use Netlify for builds."
+          echo "Sanity → Netlify: scripts/setup-sanity-rebuild-webhook.mjs"

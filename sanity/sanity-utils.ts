@@ -77,6 +77,8 @@ const talentProjection = groq`{
   "image": image.asset->url,
   "imageAlt": image.alt,
   bio,
+  isDirector,
+  isPhotographer,
   "workOrder": workOrder[]->{
     _id
   }

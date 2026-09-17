@@ -12,6 +12,13 @@ import {
   TALENT_SELECT_EVENT,
   type TalentSelectDetail,
 } from "@/lib/talentNav";
+import {
+  TALENT_ROLES,
+  defaultRoleForTalent,
+  isPhotographyWork,
+  talentInRole,
+  type TalentRole,
+} from "@/lib/talentRoles";
 import { useWheelScrollX } from "@/lib/useWheelScrollX";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import type { Talent } from "@/types/talent";
@@ -44,6 +51,12 @@ export default function TalentSection({
   const [selectedSlug, setSelectedSlug] = useState<string | null>(
     initialSlug ?? null,
   );
+  const [openRole, setOpenRole] = useState<TalentRole | null>(null);
+  const [viewRole, setViewRole] = useState<TalentRole>(() =>
+    defaultRoleForTalent(
+      talents.find((talent) => talent.slug === initialSlug) ?? null,
+    ),
+  );
   const [bioExpanded, setBioExpanded] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isXlDesktop, setIsXlDesktop] = useState(false);
@@ -60,17 +73,25 @@ export default function TalentSection({
     () => sortedTalents.filter((t) => Boolean(t.slug)),
     [sortedTalents],
   );
-  const namesScroll = namedTalents.length > 11;
+  const roleTalents = useMemo(
+    () =>
+      openRole
+        ? namedTalents.filter((talent) => talentInRole(talent, openRole))
+        : [],
+    [namedTalents, openRole],
+  );
+  const namesScroll = roleTalents.length > 11;
 
   const selected = useMemo(
     () => sortedTalents.find((t) => t.slug === selectedSlug) ?? null,
     [sortedTalents, selectedSlug],
   );
 
-  const talentWorks = useMemo(
-    () => getWorksForTalent(works, selected),
-    [works, selected],
-  );
+  const talentWorks = useMemo(() => {
+    const linked = getWorksForTalent(works, selected);
+    if (viewRole !== "photographer") return linked;
+    return linked.filter(isPhotographyWork);
+  }, [works, selected, viewRole]);
 
   const openWork = useMemo(
     () => talentWorks.find((work) => work._id === openWorkId) ?? null,
@@ -94,7 +115,7 @@ export default function TalentSection({
   }, []);
 
   useEffect(() => {
-    if (!isDesktop || namedTalents.length === 0) {
+    if (!isDesktop || !openRole || roleTalents.length === 0) {
       setNamesMaxHeight(null);
       return;
     }
@@ -108,7 +129,9 @@ export default function TalentSection({
         return;
       }
 
-      // Exactly 11 names: height up to the top of the 12th item (no peek).
+      const first = items[0];
+      const gap = Number.parseFloat(getComputedStyle(list).rowGap) || 0;
+      // Always the height of 11 names so photographer profiles match director.
       if (items.length > 11) {
         const previousScrollTop = list.scrollTop;
         list.scrollTop = 0;
@@ -116,7 +139,7 @@ export default function TalentSection({
         setNamesMaxHeight(
           Math.round(
             next.getBoundingClientRect().top -
-              items[0].getBoundingClientRect().top,
+              first.getBoundingClientRect().top,
           ),
         );
         list.scrollTop = previousScrollTop;
@@ -124,10 +147,7 @@ export default function TalentSection({
       }
 
       setNamesMaxHeight(
-        Math.round(
-          items[items.length - 1].getBoundingClientRect().bottom -
-            items[0].getBoundingClientRect().top,
-        ),
+        Math.round(first.getBoundingClientRect().height * 11 + gap * 10),
       );
     };
 
@@ -141,47 +161,68 @@ export default function TalentSection({
       window.removeEventListener("resize", measure);
       ro?.disconnect();
     };
-  }, [isDesktop, namedTalents.length]);
+  }, [isDesktop, roleTalents.length, openRole]);
 
   useEffect(() => {
     setBioExpanded(false);
     setOpenWorkId(null);
   }, [selectedSlug]);
 
-  // Clear selection when navigating away (e.g. BC) or on non-talent loads
+  // Leave Talent (nav or desktop pager): collapse names and clear the profile.
   useEffect(() => {
-    const clearSelection = () => {
+    const clearTalentView = () => {
       setSelectedSlug(null);
+      setOpenRole(null);
       setOpenWorkId(null);
       setBioExpanded(false);
     };
 
     if (!initialSlug && window.location.hash !== "#talent") {
-      clearSelection();
+      clearTalentView();
     }
 
     const onSection = (event: Event) => {
       const section = (event as CustomEvent<{ section?: string }>).detail
         ?.section;
       if (section && section !== "talent") {
-        clearSelection();
+        clearTalentView();
       }
     };
-    // A work credit elsewhere on the page asking for this talent
     const onTalent = (event: Event) => {
       const slug = (event as CustomEvent<TalentSelectDetail>).detail?.slug;
       if (!slug) return;
       setOpenWorkId(null);
       setBioExpanded(false);
       setSelectedSlug(slug);
+      const talent = talents.find((item) => item.slug === slug) ?? null;
+      setViewRole(defaultRoleForTalent(talent));
     };
     window.addEventListener("bc:section", onSection);
     window.addEventListener(TALENT_SELECT_EVENT, onTalent);
+
+    const sectionEl = sectionRef.current;
+    const syncFromPager = () => {
+      if (sectionEl?.getAttribute("data-active") === "false") {
+        clearTalentView();
+      }
+    };
+    syncFromPager();
+    const observer = sectionEl
+      ? new MutationObserver(syncFromPager)
+      : null;
+    if (sectionEl && observer) {
+      observer.observe(sectionEl, {
+        attributes: true,
+        attributeFilter: ["data-active"],
+      });
+    }
+
     return () => {
       window.removeEventListener("bc:section", onSection);
       window.removeEventListener(TALENT_SELECT_EVENT, onTalent);
+      observer?.disconnect();
     };
-  }, [initialSlug]);
+  }, [initialSlug, talents]);
 
   useEffect(() => {
     if (openWorkId && !talentWorks.some((work) => work._id === openWorkId)) {
@@ -270,86 +311,116 @@ export default function TalentSection({
     <section
       id="talent"
       ref={sectionRef}
-      className="min-h-dvh scroll-mt-12 px-3 pt-3 pb-16 md:scroll-mt-20 md:px-6 md:pt-6 md:pr-6 md:pb-10 md:pl-10 lg:px-8 lg:pt-8 lg:pr-8 lg:pb-16 lg:pl-16 xl:pb-24 xl:pl-24"
+      className="min-h-dvh scroll-mt-12 px-3 pt-3 pb-16 [--work-pt:clamp(1.25rem,calc(14dvh_-_48px),4.5rem)] md:scroll-mt-20 md:px-6 md:pt-[var(--work-pt)] md:pr-6 md:pb-10 md:pl-10 lg:px-8 lg:pr-8 lg:pb-16 lg:pl-16 xl:pb-24 xl:pl-24"
     >
-      <div className="flex items-start gap-4 md:grid md:grid-cols-[12rem_minmax(0,1fr)] md:items-start md:gap-x-8 md:gap-y-4 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-16 lg:gap-y-5 xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-x-24">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-0 md:gap-x-8 lg:gap-x-16 xl:gap-x-24">
         <aside
-          className={`flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-auto md:max-w-none ${
-            openWork
-              ? "md:col-start-1 md:row-start-1"
-              : "md:contents"
+          className={`col-start-1 flex w-[42%] max-w-[11rem] shrink-0 flex-col items-center md:w-56 md:max-w-none md:items-start ${
+            openWork ? "md:row-start-1 md:row-span-2" : "row-start-1"
           }`}
         >
-          <p
-            className={`mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:text-xs ${
-              openWork
-                ? "md:mb-5"
-                : "md:col-start-1 md:row-start-1 md:mb-0"
-            }`}
-          >
+          <p className="mb-5 w-full text-center text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 md:w-56 md:text-xs">
             Talent
           </p>
-          <div
-            className={`flex min-h-0 w-full items-stretch gap-4 md:gap-5 ${
-              openWork ? "" : "md:col-start-1 md:row-start-2"
-            } ${namesScroll ? "shrink-0" : "flex-1"}`}
-            style={
-              namesMaxHeight && namesScroll
-                ? { height: namesMaxHeight, maxHeight: namesMaxHeight }
-                : undefined
-            }
-          >
-            <ul
-              ref={namesListRef}
-              className={`flex w-full flex-col gap-3 md:gap-3 lg:gap-4 ${
-                namesScroll
-                  ? "talent-names-scroll h-full md:overflow-y-auto"
-                  : ""
+          <ul className="flex w-full max-w-full flex-col gap-3 md:w-56 md:gap-4">
+            {TALENT_ROLES.map((role) => {
+              const open = openRole === role.id;
+              return (
+                <li key={role.id} className="w-full">
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() => {
+                      if (selectedSlug) {
+                        setSelectedSlug(null);
+                        setOpenWorkId(null);
+                        setBioExpanded(false);
+                        replaceAppPath("/", undefined, "talent");
+                        setOpenRole(role.id);
+                        return;
+                      }
+                      setOpenRole((prev) =>
+                        prev === role.id ? null : role.id,
+                      );
+                    }}
+                    className={`box-border w-full whitespace-nowrap rounded-full border border-black px-2.5 py-1.5 text-center text-[10px] font-medium uppercase leading-tight tracking-wide transition-colors md:px-5 md:py-2 md:text-base ${
+                      open
+                        ? "bg-black text-white"
+                        : "bg-white text-black hover:bg-neutral-100"
+                    }`}
+                  >
+                    {role.plural}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          {openRole ? (
+            <div
+              className={`relative mt-3 w-full md:mt-8 md:w-56 ${
+                namesScroll ? "shrink-0" : "flex-1"
               }`}
             >
-              {namedTalents.map((talent) => {
-                const active = selectedSlug === talent.slug;
-                return (
-                  <li key={talent._id}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedSlug((prev) => {
-                          const next = prev === talent.slug ? null : talent.slug!;
+              <ul
+                ref={namesListRef}
+                className={`flex w-full flex-col gap-3 md:gap-4 ${
+                  namesScroll
+                    ? "talent-names-scroll md:overflow-y-auto"
+                    : ""
+                }`}
+                style={
+                  namesMaxHeight && namesScroll
+                    ? {
+                        height: namesMaxHeight,
+                        maxHeight: namesMaxHeight,
+                      }
+                    : undefined
+                }
+              >
+                {roleTalents.map((talent) => {
+                  const active = selectedSlug === talent.slug;
+                  return (
+                    <li key={talent._id} className="w-full">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next =
+                            selectedSlug === talent.slug
+                              ? null
+                              : talent.slug!;
+                          setSelectedSlug(next);
                           if (next) {
+                            setViewRole(openRole);
                             pushAppPath(talentPath(next));
                           } else {
                             replaceAppPath("/", undefined, "talent");
                           }
-                          return next;
-                        })
-                      }
-                      className={`w-full rounded-full border border-black px-5 py-2 text-center text-[10px] font-medium leading-tight uppercase transition-colors md:text-base ${
-                        active
-                          ? "bg-black text-white"
-                          : "bg-white text-black hover:bg-neutral-100"
-                      }`}
-                    >
-                      {talent.name}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            <ScrollTrack
-              scrollRef={namesListRef}
-              visible={isDesktop && namesScroll}
-              itemCount={namedTalents.length}
-              orientation="vertical"
-            />
-          </div>
+                        }}
+                        className={`box-border w-full overflow-hidden whitespace-nowrap rounded-full border border-black px-2.5 py-1.5 text-center text-[10px] font-medium uppercase leading-tight tracking-normal transition-colors md:px-4 md:py-2 md:text-base ${
+                          active
+                            ? "bg-black text-white"
+                            : "bg-white text-black hover:bg-neutral-100"
+                        }`}
+                      >
+                        {talent.name}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="absolute top-0 bottom-0 left-full">
+                <ScrollTrack
+                  scrollRef={namesListRef}
+                  visible={isDesktop && namesScroll}
+                  itemCount={roleTalents.length}
+                  orientation="vertical"
+                />
+              </div>
+            </div>
+          ) : null}
         </aside>
 
-        <div
-          className={`flex min-h-0 min-w-0 flex-1 flex-col md:col-start-2 md:ml-15 ${
-            openWork ? "md:row-start-1" : "md:row-start-2"
-          }`}
-        >
+        <div className="col-start-2 flex min-h-0 min-w-0 flex-1 flex-col md:ml-15">
           {!selected ? (
             <div className="min-h-[40vh] md:min-h-0 md:flex-1" aria-hidden />
           ) : openWork ? (
@@ -458,11 +529,13 @@ export default function TalentSection({
                 className="flex min-h-0 flex-col md:justify-start xl:justify-between"
                 style={
                   namesMaxHeight && isXlDesktop
-                    ? {
-                        height: namesMaxHeight,
-                        minHeight: namesMaxHeight,
-                        maxHeight: namesMaxHeight,
-                      }
+                    ? namesScroll
+                      ? {
+                          height: namesMaxHeight,
+                          minHeight: namesMaxHeight,
+                          maxHeight: namesMaxHeight,
+                        }
+                      : { minHeight: namesMaxHeight }
                     : undefined
                 }
               >
@@ -474,7 +547,7 @@ export default function TalentSection({
                         src={selected.image}
                         alt={selected.imageAlt || selected.name || "Talent"}
                         fill
-                        className="object-cover"
+                        className="object-contain object-top"
                         sizes="144px"
                       />
                     ) : null}

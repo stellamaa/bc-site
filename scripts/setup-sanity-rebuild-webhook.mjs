@@ -1,35 +1,48 @@
 /**
- * One-time setup: Sanity publish → GitHub Actions rebuild (GitHub Pages).
+ * One-time setup: Sanity publish → Netlify rebuild (https://blank-co.uk).
  *
- * Prerequisites:
- * 1. Push the updated `.github/workflows/nextjs.yml` (repository_dispatch) to main.
- * 2. GitHub Personal Access Token (classic) with `repo` scope:
- *    https://github.com/settings/tokens/new?scopes=repo&description=Sanity%20Pages%20rebuild
- * 3. Sanity token that can manage webhooks (Developer/Admin):
+ * 1. Netlify → Site configuration → Build & deploy → Build hooks
+ *    → Add build hook named “Sanity” on branch `main`
+ *    → copy the URL (https://api.netlify.com/build_hooks/…)
+ * 2. Sanity token that can manage webhooks (Developer/Admin):
  *    https://www.sanity.io/manage/project/w5usu9hl/api#tokens
  *
  * Usage:
- *   GITHUB_REBUILD_TOKEN=ghp_... SANITY_AUTH_TOKEN=sk... npm run setup:sanity-rebuild-webhook
+ *   NETLIFY_BUILD_HOOK_URL=https://api.netlify.com/build_hooks/… \
+ *   SANITY_AUTH_TOKEN=sk… \
+ *   npm run setup:sanity-rebuild-webhook
  */
 
 const projectId = process.env.SANITY_PROJECT_ID || "w5usu9hl";
-const githubRepo = process.env.GITHUB_REPO || "stellamaa/bc-site";
-const githubToken = process.env.GITHUB_REBUILD_TOKEN;
 const sanityToken = process.env.SANITY_AUTH_TOKEN;
+const buildHookUrl = process.env.NETLIFY_BUILD_HOOK_URL;
 const apiVersion = "v2021-10-04";
 
-const WEBHOOK_NAME = "Rebuild GitHub Pages";
-const EVENT_TYPE = "sanity-rebuild";
+const WEBHOOK_NAME = "Rebuild Netlify";
+const LEGACY_WEBHOOK_NAMES = ["Rebuild GitHub Pages", WEBHOOK_NAME];
+const DOCUMENT_TYPES = [
+  "work",
+  "talent",
+  "about",
+  "category",
+  "landingPage",
+  "workPage",
+  "logo",
+];
 
 const hooksUrl = `https://${projectId}.api.sanity.io/${apiVersion}/hooks/projects/${projectId}`;
 
 async function main() {
-  if (!githubToken) {
-    console.error("Missing GITHUB_REBUILD_TOKEN (GitHub PAT with repo scope).");
+  if (!buildHookUrl?.startsWith("https://api.netlify.com/build_hooks/")) {
+    console.error(
+      "Missing NETLIFY_BUILD_HOOK_URL (Netlify → Build hooks → Add build hook).",
+    );
     process.exit(1);
   }
   if (!sanityToken) {
-    console.error("Missing SANITY_AUTH_TOKEN (Sanity token that can manage webhooks).");
+    console.error(
+      "Missing SANITY_AUTH_TOKEN (Sanity token that can manage webhooks).",
+    );
     process.exit(1);
   }
 
@@ -37,45 +50,48 @@ async function main() {
     headers: { Authorization: `Bearer ${sanityToken}` },
   });
   if (!listRes.ok) {
-    console.error("Failed to list Sanity webhooks:", listRes.status, await listRes.text());
+    console.error(
+      "Failed to list Sanity webhooks:",
+      listRes.status,
+      await listRes.text(),
+    );
     process.exit(1);
   }
 
   const listed = await listRes.json();
   const hooks = Array.isArray(listed) ? listed : listed?.hooks || [];
-  const existing = hooks.find((hook) => hook.name === WEBHOOK_NAME);
-  if (existing?.id) {
-    const delRes = await fetch(`${hooksUrl}/${existing.id}`, {
+  for (const hook of hooks) {
+    if (!LEGACY_WEBHOOK_NAMES.includes(hook.name) || !hook.id) continue;
+    const delRes = await fetch(`${hooksUrl}/${hook.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${sanityToken}` },
     });
     if (!delRes.ok) {
-      console.error("Failed to delete old webhook:", delRes.status, await delRes.text());
+      console.error(
+        "Failed to delete old webhook:",
+        delRes.status,
+        await delRes.text(),
+      );
       process.exit(1);
     }
-    console.log(`Removed existing webhook ${existing.id}`);
+    console.log(`Removed existing webhook ${hook.name} (${hook.id})`);
   }
 
   const body = {
     type: "document",
     name: WEBHOOK_NAME,
     description:
-      "On publish, triggers repository_dispatch sanity-rebuild so GitHub Pages rebuilds with fresh content.",
-    url: `https://api.github.com/repos/${githubRepo}/dispatches`,
+      "On publish, POSTs the Netlify build hook so blank-co.uk rebuilds with fresh content.",
+    url: buildHookUrl,
     dataset: "production",
     httpMethod: "POST",
     apiVersion: "v2021-03-25",
     includeDrafts: false,
     rule: {
       on: ["create", "update", "delete"],
-      filter:
-        '_type in ["work", "talent", "about", "category", "landingPage", "workPage"]',
-      projection: `{"event_type":"${EVENT_TYPE}"}`,
-    },
-    headers: {
-      Authorization: `Bearer ${githubToken}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
+      filter: `_type in ${JSON.stringify(DOCUMENT_TYPES)}`,
+      // Tiny payload — Netlify only needs the POST, not the document.
+      projection: `{ok: true, _type}`,
     },
   };
 
@@ -89,14 +105,18 @@ async function main() {
   });
 
   if (!createRes.ok) {
-    console.error("Failed to create webhook:", createRes.status, await createRes.text());
+    console.error(
+      "Failed to create webhook:",
+      createRes.status,
+      await createRes.text(),
+    );
     process.exit(1);
   }
 
   const created = await createRes.json();
   console.log("Created Sanity webhook:", created.id || created.name || created);
   console.log(
-    "Done. Publish any Work/Talent/About in Studio → Actions should run “Deploy Next.js site to Pages”.",
+    "Done. Publish any Work / Talent / About / Logo in Studio → Netlify should start a deploy.",
   );
 }
 

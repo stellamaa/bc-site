@@ -13,6 +13,13 @@ import {
   TALENT_SELECT_EVENT,
   type TalentSelectDetail,
 } from "@/lib/talentNav";
+import {
+  TALENT_ROLES,
+  defaultRoleForTalent,
+  isPhotographyWork,
+  talentInRole,
+  type TalentRole,
+} from "@/lib/talentRoles";
 import { getWorkOverlayLabel } from "@/lib/workMedia";
 import {
   getTalentLayoutFromEnv,
@@ -43,17 +50,6 @@ function chunkItems<T>(items: T[], size: number): T[][] {
   return pages;
 }
 
-/** Split talents into 3 columns, filling left → center → right. */
-function columnizeTalents(talents: Talent[]): Talent[][] {
-  const withSlug = talents.filter((t) => t.slug);
-  const perCol = Math.max(1, Math.ceil(withSlug.length / 3));
-  return [
-    withSlug.slice(0, perCol),
-    withSlug.slice(perCol, perCol * 2),
-    withSlug.slice(perCol * 2),
-  ];
-}
-
 /**
  * Experimental mobile Talent UI (desktop uses the original TalentSection).
  * Enable with ?talentLayout=overlay or NEXT_PUBLIC_TALENT_LAYOUT=overlay
@@ -76,11 +72,22 @@ export default function TalentSectionAlt({
   const [selectedSlug, setSelectedSlug] = useState<string | null>(
     initialSlug ?? null,
   );
+  const [openRole, setOpenRole] = useState<TalentRole | null>(null);
+  const [draftSlug, setDraftSlug] = useState<string | null>(null);
+  const [viewRole, setViewRole] = useState<TalentRole>(() =>
+    defaultRoleForTalent(
+      talents.find((talent) => talent.slug === initialSlug) ?? null,
+    ),
+  );
   const [bioExpanded, setBioExpanded] = useState(false);
   const [openWorkId, setOpenWorkId] = useState<string | null>(null);
   const expandRef = useRef<HTMLDivElement>(null);
 
-  const closeMenu = () => setMenuOpen(false);
+  const closeMenu = () => {
+    setOpenRole(null);
+    setDraftSlug(null);
+    setMenuOpen(false);
+  };
 
   const dismissMenuWithoutSelection = () => {
     closeMenu();
@@ -109,6 +116,8 @@ export default function TalentSectionAlt({
 
     const clearSelection = () => {
       setSelectedSlug(null);
+      setOpenRole(null);
+      setDraftSlug(null);
       setMenuOpen(false);
       setBioExpanded(false);
       setOpenWorkId(null);
@@ -126,6 +135,8 @@ export default function TalentSectionAlt({
         ?.section;
       if (!section) return;
       if (section === "talent" && shouldHandle()) {
+        setOpenRole(null);
+        setDraftSlug(null);
         setMenuOpen(true);
         return;
       }
@@ -140,6 +151,8 @@ export default function TalentSectionAlt({
       setOpenWorkId(null);
       setBioExpanded(false);
       setSelectedSlug(slug);
+      const talent = talents.find((item) => item.slug === slug) ?? null;
+      setViewRole(defaultRoleForTalent(talent));
     };
     window.addEventListener("bc:section", onSection);
     window.addEventListener(TALENT_SELECT_EVENT, onTalent);
@@ -147,7 +160,7 @@ export default function TalentSectionAlt({
       window.removeEventListener("bc:section", onSection);
       window.removeEventListener(TALENT_SELECT_EVENT, onTalent);
     };
-  }, [forceOverlayUi, initialSlug]);
+  }, [forceOverlayUi, initialSlug, talents]);
 
   useEffect(() => {
     setBioExpanded(false);
@@ -175,10 +188,11 @@ export default function TalentSectionAlt({
     [sortedTalents, selectedSlug],
   );
 
-  const talentWorks = useMemo(
-    () => getWorksForTalent(works, selected),
-    [works, selected],
-  );
+  const talentWorks = useMemo(() => {
+    const linked = getWorksForTalent(works, selected);
+    if (viewRole !== "photographer") return linked;
+    return linked.filter(isPhotographyWork);
+  }, [works, selected, viewRole]);
 
   const openWork = useMemo(
     () => talentWorks.find((work) => work._id === openWorkId) ?? null,
@@ -202,14 +216,36 @@ export default function TalentSectionAlt({
     return () => window.cancelAnimationFrame(id);
   }, [openWork?._id]);
 
-  const columns = useMemo(
-    () => columnizeTalents(sortedTalents),
-    [sortedTalents],
+  const roleTalents = useMemo(
+    () =>
+      openRole
+        ? sortedTalents.filter(
+            (talent) => talent.slug && talentInRole(talent, openRole),
+          )
+        : [],
+    [sortedTalents, openRole],
   );
+
+  const selectMenu = () => {
+    if (!draftSlug || !openRole) return;
+    setSelectedSlug(draftSlug);
+    setViewRole(openRole);
+    pushAppPath(talentPath(draftSlug));
+    closeMenu();
+    requestAnimationFrame(() => {
+      document
+        .getElementById("talent")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
   const workPages = chunkItems(talentWorks, 4);
 
   const useOverlayUi =
     layout === "overlay" && (forceOverlayUi || isDesktop === false);
+
+  const overlayTitle = openRole
+    ? (TALENT_ROLES.find((role) => role.id === openRole)?.plural ?? "Talent")
+    : "Talent";
 
   // Flag off / desktop (without force) / SSR → original component
   if (!useOverlayUi) {
@@ -230,46 +266,68 @@ export default function TalentSectionAlt({
       {/* Name picker overlay — only while open; does not mount on initial page load */}
       {menuOpen ? (
         <div
-          className="fixed inset-0 z-[60] flex flex-col bg-white pt-12 pb-10"
+          className="fixed inset-x-0 top-12 bottom-0 z-[60] flex flex-col bg-white pb-10"
           role="dialog"
           aria-modal="true"
-          aria-label="Talent"
+          aria-label={overlayTitle}
         >
           <p className="px-4 py-3 text-center text-[10px] font-medium tracking-[0.12em] uppercase text-neutral-400">
-            Talent
+            {overlayTitle}
           </p>
-          <div className="flex min-h-0 flex-1 items-start justify-between gap-3 overflow-y-auto px-4 pt-4">
-            {columns.map((col, colIndex) => (
-              <ul
-                key={colIndex}
-                className="flex flex-1 flex-col items-center gap-4"
-              >
-                {col.map((talent) => (
-                  <li key={talent._id} className="w-full max-w-[9.5rem]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedSlug(talent.slug!);
-                        pushAppPath(talentPath(talent.slug!));
-                        closeMenu();
-                        requestAnimationFrame(() => {
-                          document
-                            .getElementById("talent")
-                            ?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            });
-                        });
-                      }}
-                      className="w-full rounded-full border border-black px-2.5 py-1.5 text-center text-[10px] font-medium leading-tight tracking-wide uppercase transition-colors hover:bg-neutral-100"
-                    >
-                      {talent.name}
-                    </button>
-                  </li>
-                ))}
+          {!openRole ? (
+            <ul className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-6 py-4">
+              {TALENT_ROLES.map((role) => (
+                <li key={role.id} className="w-full max-w-[16rem]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraftSlug(null);
+                      setOpenRole(role.id);
+                    }}
+                    className="w-full rounded-full border border-black bg-white px-5 py-2 text-center text-[10px] font-medium uppercase leading-tight tracking-wide"
+                  >
+                    {role.plural}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
+              <ul className="grid grid-cols-3 content-start gap-x-1.5 gap-y-2">
+                {roleTalents.map((talent) => {
+                  const selected = draftSlug === talent.slug;
+                  return (
+                    <li key={talent._id} className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDraftSlug((prev) =>
+                            prev === talent.slug ? null : talent.slug!,
+                          )
+                        }
+                        className={`w-full truncate rounded-full border border-black px-1.5 py-1.5 text-center text-[10px] font-medium uppercase leading-tight tracking-wide transition-colors ${
+                          selected
+                            ? "bg-black text-white"
+                            : "bg-white text-black"
+                        }`}
+                      >
+                        {talent.name}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
-            ))}
-          </div>
+              <div className="pt-4 text-center">
+                <button
+                  type="button"
+                  onClick={selectMenu}
+                  className="text-[10px] font-medium tracking-wide uppercase"
+                >
+                  (SELECT)
+                </button>
+              </div>
+            </div>
+          )}
           <button
             type="button"
             onClick={dismissMenuWithoutSelection}
@@ -295,7 +353,7 @@ export default function TalentSectionAlt({
                   src={selected.image}
                   alt={selected.imageAlt || selected.name || "Talent"}
                   fill
-                  className="object-cover"
+                  className="object-contain object-top"
                   sizes="112px"
                 />
               ) : null}
