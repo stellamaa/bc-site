@@ -357,7 +357,7 @@ export default function TalentSection({
           </ul>
           {openRole ? (
             <div
-              className={`relative mt-3 w-full md:mt-8 md:w-56 ${
+              className={`relative mt-3 w-full md:mt-12 md:w-56 ${
                 namesScroll ? "shrink-0" : "flex-1"
               }`}
             >
