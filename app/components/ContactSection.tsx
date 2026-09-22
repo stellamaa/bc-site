@@ -74,7 +74,7 @@ export default function ContactSection({
       className="flex min-h-dvh scroll-mt-12 flex-col items-center justify-start px-4 pt-16 pb-12 md:h-full md:min-h-0 md:scroll-mt-20 md:justify-start md:px-16 md:py-0 lg:px-24"
     >
       {!hasLinks ? (
-        <div className="min-h-[40vh]" aria-hidden />
+        <div className="min-h-[40vh]" aria-hidden/>
       ) : (
         <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-start md:justify-center">
           <ul className="flex flex-col items-center gap-6 text-center md:gap-[clamp(0.25rem,1.4vh,1.25rem)]">
