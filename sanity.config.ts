@@ -2,6 +2,7 @@
 
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
+import { visionTool } from "@sanity/vision";
 import {
   sanityApiVersion,
   sanityDataset,
@@ -16,7 +17,7 @@ const config = defineConfig({
   apiVersion: sanityApiVersion,
   title: "BC Site",
   basePath: studioBasePath,
-  plugins: [structureTool()],
+  plugins: [structureTool(), visionTool()],
   schema: {
     types: schemas,
   },
