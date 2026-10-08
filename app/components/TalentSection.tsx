@@ -619,7 +619,7 @@ export default function TalentSection({
                                 <li
                                   key={work._id}
                                   data-work-id={work._id}
-                                  className="group relative w-[8rem] shrink-0 lg:w-[9rem] xl:w-[9.5rem]"
+                                  className="group w-[8rem] shrink-0 lg:w-[9rem] xl:w-[9.5rem]"
                                 >
                                   <button
                                     type="button"
@@ -668,19 +668,19 @@ export default function TalentSection({
                                           sizes="160px"
                                         />
                                       ) : null}
-                                      {overlayLabel ? (
-                                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-bold tracking-wide text-white uppercase drop-shadow md:text-xl">
-                                          {overlayLabel}
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                  </button>
+                                    {overlayLabel ? (
+                                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-sm font-bold tracking-wide text-white uppercase drop-shadow md:text-xl">
+                                        {overlayLabel}
+                                      </span>
+                                    ) : null}
+                                  </div>
                                   {work.title ? (
-                                    <p className="pointer-events-none absolute top-full left-0 mt-2 line-clamp-2 w-full text-xs font-medium leading-snug">
+                                    <p className="line-clamp-2 text-xs font-medium leading-snug">
                                       {work.title}
                                     </p>
                                   ) : null}
-                                </li>
+                                </button>
+                              </li>
                               );
                             })}
                           </ul>
