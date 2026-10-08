@@ -4,6 +4,7 @@ export type WorkMediaKind = "video" | "gallery" | "videoGallery" | "none";
 
 export type ParsedVideo =
   | { kind: "youtube"; embedUrl: string; watchUrl: string }
+  | { kind: "vimeo"; embedUrl: string; watchUrl: string }
   | { kind: "file"; src: string };
 
 const YOUTUBE_HOSTS = new Set([
@@ -50,6 +51,45 @@ export function getYouTubeId(url: string): string | null {
   }
 }
 
+const VIMEO_HOSTS = new Set(["vimeo.com", "www.vimeo.com", "player.vimeo.com"]);
+
+/** Public and unlisted Vimeo links, including player.vimeo.com embeds. */
+export function getVimeoEmbed(
+  url: string,
+): { id: string; hash?: string } | null {
+  try {
+    const parsed = new URL(url);
+    if (!VIMEO_HOSTS.has(parsed.hostname)) return null;
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const videoIndex = parts.lastIndexOf("video");
+    let id: string | undefined;
+    let hashFromPath: string | undefined;
+
+    if (
+      videoIndex >= 0 &&
+      parts[videoIndex + 1] &&
+      /^\d+$/.test(parts[videoIndex + 1])
+    ) {
+      id = parts[videoIndex + 1];
+    } else {
+      const idIndex = parts.findIndex((part) => /^\d+$/.test(part));
+      if (idIndex < 0) return null;
+      id = parts[idIndex];
+      const next = parts[idIndex + 1];
+      if (next && !/^\d+$/.test(next)) hashFromPath = next;
+    }
+
+    if (!id) return null;
+
+    const hash = parsed.searchParams.get("h") || hashFromPath || undefined;
+
+    return { id, hash };
+  } catch {
+    return null;
+  }
+}
+
 export function parseVideoSource(
   videoUrl?: string,
   videoFileUrl?: string,
@@ -65,6 +105,22 @@ export function parseVideoSource(
     return {
       kind: "youtube",
       embedUrl: `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`,
+      watchUrl: videoUrl,
+    };
+  }
+
+  const vimeo = getVimeoEmbed(videoUrl);
+  if (vimeo) {
+    const params = new URLSearchParams({
+      autoplay: "1",
+      title: "0",
+      byline: "0",
+      portrait: "0",
+    });
+    if (vimeo.hash) params.set("h", vimeo.hash);
+    return {
+      kind: "vimeo",
+      embedUrl: `https://player.vimeo.com/video/${vimeo.id}?${params}`,
       watchUrl: videoUrl,
     };
   }

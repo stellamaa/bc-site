@@ -95,6 +95,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
   const canPrev = galleryIndex > 0;
   const canNext = galleryIndex < galleryLength - 1;
   const isVideoPlayer = mediaKind === "video" || mediaKind === "videoGallery";
+  const isEmbed = video?.kind === "youtube" || video?.kind === "vimeo";
 
   const started = isVideoPlayer && video?.kind === "file" && playing;
 
@@ -158,7 +159,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
       >
         {isVideoPlayer && video ? (
           <>
-            {video.kind === "youtube" && playing ? (
+            {isEmbed && playing ? (
               <iframe
                 title={work.title || "Project video"}
                 src={video.embedUrl}
@@ -191,7 +192,7 @@ export default function WorkExpand({ work, onClose }: WorkExpandProps) {
               />
             ) : null}
 
-            {!playing && video.kind === "youtube" && poster ? (
+            {!playing && isEmbed && poster ? (
               <Image
                 src={poster}
                 alt={
