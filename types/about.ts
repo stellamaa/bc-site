@@ -20,8 +20,8 @@ export type About = {
   description?: string;
   profiles?: AboutProfile[];
   staff?: AboutStaff[];
-  featuredGif?: string;
-  featuredGifAlt?: string;
+  /** Vimeo URL — plays muted/looping where the About GIF used to be. */
+  featuredVideoUrl?: string;
   featuredImage?: string;
   featuredImageAlt?: string;
   phone?: string;

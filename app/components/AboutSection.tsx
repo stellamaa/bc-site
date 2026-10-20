@@ -3,11 +3,21 @@ import AboutDescription from "@/app/components/AboutDescription";
 import { AboutExpandProvider } from "@/app/components/AboutExpand";
 import AboutProfiles from "@/app/components/AboutProfiles";
 import MobileContactAlign from "@/app/components/MobileContactAlign";
+import { getVimeoEmbed } from "@/lib/workMedia";
 import type { About } from "@/types/about";
 
 type AboutSectionProps = {
   about: About | null;
 };
+
+/** GIF-style background: muted, looping, no chrome. */
+function featuredVideoBackgroundSrc(url?: string): string | null {
+  const vimeo = url ? getVimeoEmbed(url) : null;
+  if (!vimeo) return null;
+  const params = new URLSearchParams({ background: "1" });
+  if (vimeo.hash) params.set("h", vimeo.hash);
+  return `https://player.vimeo.com/video/${vimeo.id}?${params}`;
+}
 
 export default function AboutSection({ about }: AboutSectionProps) {
   if (!about) {
@@ -18,19 +28,17 @@ export default function AboutSection({ about }: AboutSectionProps) {
     description,
     profiles = [],
     staff,
-    featuredGif,
-    featuredGifAlt,
+    featuredVideoUrl,
     featuredImage,
     featuredImageAlt,
   } = about;
 
   const staffList = staff ?? [];
   const hasStaff = staffList.length > 0;
-  const mediaUrl = featuredGif || featuredImage;
-  const mediaAlt =
-    (featuredGif ? featuredGifAlt : featuredImageAlt) || "BlankCo";
-  const isGif = Boolean(featuredGif);
-  const hasFeatured = Boolean(mediaUrl);
+  const videoSrc = featuredVideoBackgroundSrc(featuredVideoUrl);
+  const mediaUrl = videoSrc ? null : featuredImage;
+  const mediaAlt = featuredImageAlt || "BlankCo";
+  const hasFeatured = Boolean(videoSrc || mediaUrl);
 
   const bioClass =
     "min-w-0 text-xs font-normal leading-[1.15] whitespace-pre-line md:text-[0.8rem] lg:text-sm";
@@ -132,17 +140,25 @@ export default function AboutSection({ about }: AboutSectionProps) {
       </div>
 
       {hasFeatured ? (
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 md:block">
-          <Image
-            src={mediaUrl!}
-            alt={mediaAlt}
-            fill
-            className="object-cover"
-            sizes="50vw"
-            loading="lazy"
-            // Preserve GIF animation (optimizer would flatten frames).
-            unoptimized={isGif}
-          />
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 overflow-hidden md:block">
+          {videoSrc ? (
+            <iframe
+              title="About"
+              src={videoSrc}
+              className="absolute top-1/2 left-1/2 h-[56.25vw] min-h-full w-[177.78%] min-w-full -translate-x-1/2 -translate-y-1/2 border-0"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <Image
+              src={mediaUrl!}
+              alt={mediaAlt}
+              fill
+              className="object-cover"
+              sizes="50vw"
+              loading="lazy"
+            />
+          )}
         </div>
       ) : null}
     </section>

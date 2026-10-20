@@ -73,7 +73,7 @@ const about = defineType({
       title: "Staff",
       type: "array",
       description:
-        "Add one or more staff members. Shown on the left with profiles when Featured Image / GIF is set; otherwise on the right.",
+        "Add one or more staff members. Shown on the left with profiles when Featured video / Image is set; otherwise on the right.",
       of: [
         defineArrayMember({
           type: "object",
@@ -116,25 +116,34 @@ const about = defineType({
       ],
     }),
     defineField({
-      name: "featuredGif",
-      title: "Featured GIF",
-      type: "image",
+      name: "featuredVideoUrl",
+      title: "Featured video URL",
+      type: "url",
       description:
-        "Optional animated GIF on the right of the About page. When set, replaces the Featured Image.",
-      options: {
-        accept: "image/gif",
-        hotspot: true,
-      },
-      fields: [
-        defineField({ name: "alt", title: "Alt", type: "string" }),
-      ],
+        "Replaces the old Featured GIF upload. Paste a Vimeo link — it plays muted and looping on the right of the About page (same place as the GIF). When set, replaces the Featured Image.",
+      validation: (rule) =>
+        rule.uri({ scheme: ["http", "https"] }).custom((value) => {
+          if (!value) return true;
+          try {
+            const host = new URL(value).hostname.replace(/^www\./, "");
+            if (
+              host === "vimeo.com" ||
+              host === "player.vimeo.com"
+            ) {
+              return true;
+            }
+            return "Use a Vimeo URL (vimeo.com or player.vimeo.com)";
+          } catch {
+            return "Enter a valid URL";
+          }
+        }),
     }),
     defineField({
       name: "featuredImage",
       title: "Featured Image",
       type: "image",
       description:
-        "Large image on the right of the About page. Used when Featured GIF is empty. Staff still shows on the left when this (or the GIF) is set.",
+        "Large image on the right of the About page. Used when Featured video URL is empty. Staff still shows on the left when this (or the video) is set.",
       options: { hotspot: true },
       fields: [
         defineField({ name: "alt", title: "Alt", type: "string" }),
