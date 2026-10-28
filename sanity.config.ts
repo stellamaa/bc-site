@@ -3,6 +3,7 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
+import { media } from "sanity-plugin-media";
 import {
   sanityApiVersion,
   sanityDataset,
@@ -17,7 +18,7 @@ const config = defineConfig({
   apiVersion: sanityApiVersion,
   title: "BC Site",
   basePath: studioBasePath,
-  plugins: [structureTool(), visionTool()],
+  plugins: [structureTool(), visionTool(), media()],
   schema: {
     types: schemas,
   },
