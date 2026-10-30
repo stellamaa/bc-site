@@ -13,8 +13,10 @@ export type Talent = {
   bio?: string;
   /** Talent column: Director. Missing/undefined counts as true for older docs. */
   isDirector?: boolean;
-  /** Talent column: Photographer. Can be ticked together with Director. */
+  /** Talent column: Photographer. Can be ticked together with other roles. */
   isPhotographer?: boolean;
+  /** Talent column: Emerging Talent. Can be ticked together with other roles. */
+  isEmergingTalent?: boolean;
   categories?: TalentCategoryRef[];
   /** Drag order of reverse-linked works (from Studio). */
   workOrder?: { _id: string }[];

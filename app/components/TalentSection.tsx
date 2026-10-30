@@ -31,6 +31,9 @@ type TalentSectionProps = {
   initialSlug?: string;
 };
 
+/** Desktop names list: show this many before scrolling. */
+const NAMES_VISIBLE = 9;
+
 function formatIndex(index: number) {
   return String(index + 1).padStart(2, "0");
 }
@@ -80,7 +83,7 @@ export default function TalentSection({
         : [],
     [namedTalents, openRole],
   );
-  const namesScroll = roleTalents.length > 11;
+  const namesScroll = roleTalents.length > NAMES_VISIBLE;
 
   const selected = useMemo(
     () => sortedTalents.find((t) => t.slug === selectedSlug) ?? null,
@@ -131,11 +134,11 @@ export default function TalentSection({
 
       const first = items[0];
       const gap = Number.parseFloat(getComputedStyle(list).rowGap) || 0;
-      // Always the height of 11 names so photographer profiles match director.
-      if (items.length > 11) {
+      // Cap at NAMES_VISIBLE so every role column matches height.
+      if (items.length > NAMES_VISIBLE) {
         const previousScrollTop = list.scrollTop;
         list.scrollTop = 0;
-        const next = items[11];
+        const next = items[NAMES_VISIBLE];
         setNamesMaxHeight(
           Math.round(
             next.getBoundingClientRect().top -
@@ -147,7 +150,10 @@ export default function TalentSection({
       }
 
       setNamesMaxHeight(
-        Math.round(first.getBoundingClientRect().height * 11 + gap * 10),
+        Math.round(
+          first.getBoundingClientRect().height * NAMES_VISIBLE +
+            gap * (NAMES_VISIBLE - 1),
+        ),
       );
     };
 

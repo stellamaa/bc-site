@@ -79,6 +79,7 @@ const talentProjection = groq`{
   bio,
   isDirector,
   isPhotographer,
+  isEmergingTalent,
   "workOrder": workOrder[]->{
     _id
   }

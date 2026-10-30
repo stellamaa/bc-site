@@ -1,6 +1,21 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import TalentWorkOrderInput from "../components/TalentWorkOrderInput";
 
+type TalentRolesParent = {
+  isDirector?: boolean;
+  isPhotographer?: boolean;
+  isEmergingTalent?: boolean;
+};
+
+function hasAtLeastOneRole(parent: TalentRolesParent | undefined) {
+  if (!parent) return false;
+  return (
+    parent.isDirector !== false ||
+    parent.isPhotographer === true ||
+    parent.isEmergingTalent === true
+  );
+}
+
 const talent = defineType({
   name: "talent",
   title: "Talent",
@@ -40,26 +55,43 @@ const talent = defineType({
       name: "isDirector",
       title: "Director",
       type: "boolean",
-      description: "Shows in the Director column on Talent. Tick both for people in both lists.",
+      description:
+        "Shows under Directors on Talent. Tick any combination of roles.",
       initialValue: true,
       validation: (rule) =>
-        rule.custom((isDirector, context) => {
-          const parent = context.parent as {
-            isPhotographer?: boolean;
-          };
-          if (isDirector === false && parent.isPhotographer !== true) {
-            return "Tick Director, Photographer, or both.";
-          }
-          return true;
-        }),
+        rule.custom((_, context) =>
+          hasAtLeastOneRole(context.parent as TalentRolesParent)
+            ? true
+            : "Tick at least one: Director, Photographer, or Emerging Talent.",
+        ),
     }),
     defineField({
       name: "isPhotographer",
       title: "Photographer",
       type: "boolean",
       description:
-        "Shows in the Photographer column. Their Talent profile then lists Photography works only.",
+        "Shows under Photographers. Their Talent profile then lists Photography works only.",
       initialValue: false,
+      validation: (rule) =>
+        rule.custom((_, context) =>
+          hasAtLeastOneRole(context.parent as TalentRolesParent)
+            ? true
+            : "Tick at least one: Director, Photographer, or Emerging Talent.",
+        ),
+    }),
+    defineField({
+      name: "isEmergingTalent",
+      title: "Emerging Talent",
+      type: "boolean",
+      description:
+        "Shows under Emerging Talent. Can be combined with Director and/or Photographer.",
+      initialValue: false,
+      validation: (rule) =>
+        rule.custom((_, context) =>
+          hasAtLeastOneRole(context.parent as TalentRolesParent)
+            ? true
+            : "Tick at least one: Director, Photographer, or Emerging Talent.",
+        ),
     }),
     defineField({
       name: "categories",
@@ -99,11 +131,13 @@ const talent = defineType({
       media: "image",
       isDirector: "isDirector",
       isPhotographer: "isPhotographer",
+      isEmergingTalent: "isEmergingTalent",
     },
-    prepare({ title, media, isDirector, isPhotographer }) {
+    prepare({ title, media, isDirector, isPhotographer, isEmergingTalent }) {
       const roles = [
         isDirector !== false ? "Director" : null,
         isPhotographer ? "Photographer" : null,
+        isEmergingTalent ? "Emerging Talent" : null,
       ].filter(Boolean);
       return {
         title,
